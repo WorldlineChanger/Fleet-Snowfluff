@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Fleet Snowfluff - Aemeath</title>
+  <!-- 网站图标 -->
   <link rel="icon" href="assets/Fleet_Snowfluff.png" type="image/png">
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,16 +18,14 @@
       --accent-pink: #ffb7c5;
       --accent-blue: #a0c4ff;
       --text-glow: #e0e6ff;
-      --glass: rgba(18, 20, 40, 0.65);
+      --glass: rgba(18, 20, 40, 0.75);
       --border: rgba(160, 196, 255, 0.3);
     }
 
     * { box-sizing: border-box; }
     
     html, body {
-      height: 100%;
-      margin: 0;
-      overflow: hidden;
+      height: 100%; margin: 0; overflow: hidden;
       background-color: var(--bg-deep);
       background-image: 
         radial-gradient(circle at 50% 0%, #3a3a6a 0%, transparent 60%),
@@ -35,26 +34,21 @@
       color: var(--text-glow);
       user-select: none;
       -webkit-tap-highlight-color: transparent;
-      /* 自定义光标 */
       cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="%23a0c4ff" d="M11 0h2v9h-2zM11 15h2v9h-2zM0 11h9v2H0zM15 11h9v2h-9zM11 11h2v2h-2z"/><path fill="rgba(0,0,0,0.5)" d="M12 9h1v2h-1zM13 12h2v1h-2zM12 13h-1v2h1zM9 12h2v-1h-2z"/></svg>') 12 12, crosshair;
     }
 
-    /* 噪点层 */
+    /* 隐藏模板容器 */
+    #sprite-templates { display: none; }
+
     .noise {
       position: fixed; inset: 0;
       background: url('data:image/svg+xml;utf8,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noiseFilter"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noiseFilter)" opacity="0.04"/%3E%3C/svg%3E');
-      pointer-events: none;
-      z-index: 1;
+      pointer-events: none; z-index: 1;
     }
 
-    /* 主布局容器 */
     .container {
-      position: relative;
-      height: 100%;
-      width: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      position: relative; height: 100%; width: 100%;
+      display: flex; align-items: center; justify-content: center;
       z-index: 10;
     }
 
@@ -65,238 +59,230 @@
       padding: 60px 50px;
       background: var(--glass);
       border: 1px solid var(--border);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
       animation: float 6s ease-in-out infinite;
       box-shadow: 0 10px 50px rgba(0,0,0,0.5);
       z-index: 12;
       transition: transform 0.1s;
     }
-
     .corner {
-      position: absolute;
-      width: 6px; height: 6px;
+      position: absolute; width: 6px; height: 6px;
       background: var(--accent-pink);
       box-shadow: 0 0 6px var(--accent-pink);
     }
     .tl { top: -1px; left: -1px; } .tr { top: -1px; right: -1px; }
     .bl { bottom: -1px; left: -1px; } .br { bottom: -1px; right: -1px; }
 
-    /* 两行交错文字 */
+    /* 流光文字 (带标点) */
     .cn-wrapper {
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
-      margin-bottom: 36px;
+      display: flex; flex-direction: column; gap: 24px; margin-bottom: 36px;
     }
     .quote-line {
       font-size: clamp(24px, 3.5vw, 36px);
-      color: #fff;
-      text-shadow: 2px 2px 0px rgba(0,0,0,0.8), 0 0 15px var(--accent-blue);
       letter-spacing: 2px;
       white-space: nowrap;
+      position: relative;
+      color: rgba(255,255,255,0.9);
+      background: linear-gradient(110deg, rgba(255,255,255,0.9) 40%, var(--accent-pink) 50%, rgba(255,255,255,0.9) 60%);
+      background-size: 200% 100%;
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+      animation: shimmer 6s infinite linear;
+      text-shadow: 0 0 20px rgba(160, 196, 255, 0.3);
     }
-    .line-1 { align-self: flex-start; margin-left: 10px; }
-    .line-2 { align-self: flex-end; margin-right: 10px; }
+    .line-1 { align-self: flex-start; margin-left: 10px; animation-delay: 0s; }
+    .line-2 { align-self: flex-end; margin-right: 10px; animation-delay: 3s; }
 
-    .quote-en {
-      font-size: clamp(12px, 1.5vw, 16px);
-      margin: 0;
-      color: var(--accent-blue);
-      opacity: 0.8;
-      letter-spacing: 1px;
-      text-shadow: 1px 1px 0px rgba(0,0,0,0.8);
-      text-align: center;
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
     }
-
     @keyframes float {
       0%, 100% { transform: translateY(0px); }
       50% { transform: translateY(-8px); }
     }
 
-    /* === 侧边歌单栏 === */
-    .side-panel {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 280px;
-      padding: 24px;
-      background: linear-gradient(180deg, rgba(18,20,40,0.5) 0%, rgba(18,20,40,0.2) 100%);
-      border-left: 1px solid var(--border);
-      backdrop-filter: blur(4px);
-      z-index: 20; /* 提高层级，确保能点到 */
-      transition: opacity 0.3s;
-    }
-    .side-panel.left {
-      left: 40px;
-      border-left: 3px solid var(--accent-pink);
-      text-align: left;
-      border-radius: 0 8px 8px 0;
-    }
-    .side-panel.right {
-      right: 40px;
-      border-left: 0;
-      border-right: 3px solid var(--accent-blue);
-      text-align: right;
-      border-radius: 8px 0 0 8px;
+    .quote-en {
+      font-size: clamp(12px, 1.5vw, 16px); margin: 0;
+      color: var(--accent-blue); opacity: 0.8;
+      letter-spacing: 1px; text-align: center;
+      text-shadow: 1px 1px 0px rgba(0,0,0,0.8);
     }
 
-    .album-title {
-      font-size: 18px;
-      margin: 0 0 16px 0;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-weight: bold;
+    /* === 侧边/顶部歌单通用样式 === */
+    .panel-bg {
+      background: linear-gradient(180deg, rgba(18,20,40,0.5) 0%, rgba(18,20,40,0.2) 100%);
+      backdrop-filter: blur(4px);
+      z-index: 20; transition: opacity 0.3s;
     }
+    .deco-pixel { min-width: 8px; width: 8px; height: 8px; background: currentColor; box-shadow: 0 0 5px currentColor; }
+    
+    .song-list { list-style: none; padding: 0; margin: 0; }
+    .song-list li {
+      font-size: 14px; color: var(--text-glow); opacity: 0.6;
+      cursor: pointer; transition: all 0.2s ease-out; display: flex; align-items: center;
+    }
+    .song-list li.active { opacity: 1; color: #fff; font-weight: bold; text-shadow: 0 0 5px currentColor; }
+    
+    /* 播放指示器动画 */
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+    /* === 左右侧边栏 === */
+    .side-panel {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      width: 280px; padding: 24px;
+      border-left: 1px solid var(--border);
+    }
+    .side-panel.left { left: 40px; border-left: 3px solid var(--accent-pink); text-align: left; border-radius: 0 8px 8px 0; }
+    .side-panel.right { right: 40px; border-left: 0; border-right: 3px solid var(--accent-blue); text-align: right; border-radius: 8px 0 0 8px; }
+
+    .album-title { font-size: 18px; margin: 0 0 16px 0; display: flex; align-items: center; gap: 10px; font-weight: bold; }
     .side-panel.left .album-title { color: var(--accent-pink); text-shadow: 0 0 8px rgba(255,183,197,0.4); }
     .side-panel.right .album-title { color: var(--accent-blue); text-shadow: 0 0 8px rgba(160,196,255,0.4); justify-content: flex-end; }
 
-    .deco-pixel {
-      min-width: 8px; width: 8px; height: 8px;
-      background: currentColor;
-      box-shadow: 0 0 5px currentColor;
-    }
-
-    .song-list { list-style: none; padding: 0; margin: 0; }
-    .song-list li {
-      font-size: 15px;
-      color: var(--text-glow);
-      opacity: 0.6;
-      margin-bottom: 12px;
-      padding: 6px 0;
-      cursor: pointer; /* 确保鼠标变成手型 */
-      transition: all 0.2s ease-out;
-      display: flex;
-      align-items: center;
-    }
+    .song-list li { margin-bottom: 12px; padding: 6px 0; }
+    .side-panel.left .song-list li:hover { opacity: 1; transform: translateX(8px); text-shadow: 0 0 10px var(--accent-pink); }
     .side-panel.right .song-list li { justify-content: flex-end; }
+    .side-panel.right .song-list li:hover { transform: translateX(-8px); text-shadow: 0 0 10px var(--accent-blue); }
 
-    /* === 交互效果：Hover === */
-    .song-list li:hover {
-      opacity: 1;
-      transform: translateX(8px);
-      text-shadow: 0 0 10px var(--accent-pink);
-    }
-    .side-panel.right .song-list li:hover {
-      transform: translateX(-8px);
-      text-shadow: 0 0 10px var(--accent-blue);
+    .side-panel.left .song-list li.active::before { content: "►"; margin-right: 8px; color: var(--accent-pink); font-size: 12px; animation: blink 1.2s infinite; }
+    .side-panel.right .song-list li.active::after { content: "◄"; margin-left: 8px; color: var(--accent-blue); font-size: 12px; animation: blink 1.2s infinite; }
+
+    /* === 顶部横向栏 === */
+    .top-panel {
+      position: fixed; top: 0; left: 0; width: 100%;
+      padding: 16px 40px;
+      display: flex; align-items: center; justify-content: center; gap: 40px;
+      border-bottom: 1px solid var(--border);
+      /* 顶部渐变边框 */
+      background: 
+        linear-gradient(to right, var(--accent-pink), var(--accent-blue)) top left / 100% 3px no-repeat,
+        linear-gradient(180deg, rgba(15,17,35,0.9) 0%, rgba(15,17,35,0.6) 100%);
     }
 
-    /* === 交互效果：Active (播放中) === */
-    .song-list li.active {
-      opacity: 1;
-      color: #fff;
-      font-weight: bold;
-      text-shadow: 0 0 5px currentColor;
+    .top-album-info {
+      display: flex; align-items: center; gap: 12px;
+      font-size: 18px; font-weight: bold;
+      background: linear-gradient(to right, var(--accent-pink), var(--accent-blue));
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+      text-shadow: 0 0 20px rgba(160,196,255,0.2);
     }
-    /* 播放指示器 (左) */
-    .side-panel.left .song-list li.active::before {
-      content: "►"; /* 像素箭头 */
-      margin-right: 8px;
-      color: var(--accent-pink);
-      font-size: 12px;
-      animation: blink 1.2s infinite;
+    
+    .top-list { display: flex; gap: 24px; padding: 0; margin: 0; list-style: none; }
+    .top-list li {
+      margin: 0; opacity: 0.6; transition: all 0.2s;
     }
-    /* 播放指示器 (右) */
-    .side-panel.right .song-list li.active::after {
-      content: "◄";
-      margin-left: 8px;
-      color: var(--accent-blue);
-      font-size: 12px;
-      animation: blink 1.2s infinite;
-    }
-    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    .top-list li:hover { opacity: 1; transform: translateY(-2px); text-shadow: 0 0 10px #fff; }
+    .top-list li.active { opacity: 1; color: #fff; font-weight: bold; border-bottom: 2px solid var(--text-glow); }
 
-
-    /* === 底部播放控制栏 === */
-    .player-bar {
-      position: fixed;
-      bottom: 30px;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      align-items: center;
-      gap: 20px;
-      padding: 10px 24px;
-      background: rgba(15, 17, 35, 0.85);
+    /* === 胶囊播放器 === */
+    .player-capsule {
+      position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+      height: 52px;
+      width: 460px; /* 初始宽度 */
+      background: rgba(15, 17, 35, 0.92);
       border: 1px solid var(--border);
       border-radius: 50px;
-      backdrop-filter: blur(10px);
+      backdrop-filter: blur(12px);
       z-index: 100;
-      box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+      box-shadow: 0 5px 25px rgba(0,0,0,0.6);
+      
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 10px;
+      overflow: hidden;
+      transition: width 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), border-color 0.3s;
     }
 
-    .btn-control {
-      background: none;
-      border: 1px solid rgba(255,255,255,0.2);
-      border-radius: 50%;
-      width: 36px; height: 36px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      color: var(--text-glow);
-      transition: all 0.2s;
-    }
-    .btn-control:hover {
-      background: rgba(255,255,255,0.1);
+    .player-capsule:hover {
+      width: 680px; /* 展开以显示顺序和音量 */
       border-color: var(--accent-blue);
-      box-shadow: 0 0 8px var(--accent-blue);
-      transform: scale(1.1);
+      box-shadow: 0 8px 30px rgba(160, 196, 255, 0.2);
     }
-    /* 播放/暂停图标 SVG */
-    .icon { width: 14px; height: 14px; fill: currentColor; }
 
-    /* 音量条 */
-    .volume-wrap {
-      display: flex;
-      align-items: center;
-      gap: 8px;
+    .p-group { display: flex; align-items: center; gap: 16px; height: 100%; padding: 0 8px; flex-shrink: 0; }
+    .p-divider { width: 1px; height: 20px; background: rgba(255,255,255,0.15); }
+
+    /* 按钮：圆形像素风 (复用旧版样式) */
+    .btn-circle {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: transparent; border: 1px solid rgba(255,255,255,0.2);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; color: #fff; transition: all 0.2s;
+      flex-shrink: 0;
     }
-    .vol-label { font-size: 12px; color: var(--accent-blue); }
-    input[type=range] {
-      -webkit-appearance: none;
-      width: 80px;
-      background: transparent;
+    .btn-circle:hover {
+      background: rgba(255,255,255,0.1); border-color: var(--accent-pink);
+      box-shadow: 0 0 8px var(--accent-pink); transform: scale(1.05);
     }
+    .icon-svg { width: 16px; height: 16px; fill: currentColor; }
+
+    /* 进度条：像素风 */
+    .progress-container { position: relative; width: 200px; height: 24px; display: flex; align-items: center; }
+    input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; cursor: pointer; }
     input[type=range]::-webkit-slider-runnable-track {
-      width: 100%; height: 4px;
-      background: rgba(255,255,255,0.2);
-      border-radius: 2px;
+      width: 100%; height: 6px; background: rgba(255,255,255,0.15); border-radius: 3px;
     }
     input[type=range]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      height: 12px; width: 6px;
-      border-radius: 2px;
-      background: var(--accent-pink);
-      margin-top: -4px;
-      cursor: pointer;
-      box-shadow: 0 0 5px var(--accent-pink);
+      -webkit-appearance: none; height: 14px; width: 6px;
+      background: var(--accent-pink); margin-top: -4px; border-radius: 2px;
+      box-shadow: 0 0 5px var(--accent-pink); transition: transform 0.1s;
     }
+    input[type=range]:hover::-webkit-slider-thumb { transform: scale(1.2); background: #fff; }
+
+    .time-display {
+      font-size: 12px; font-family: monospace; color: var(--accent-blue); width: 100px; text-align: center;
+      white-space: nowrap;
+    }
+
+    /* 隐藏区域 (顺序 + 音量) */
+    .extra-controls {
+      display: flex; align-items: center; gap: 14px;
+      opacity: 0; transform: translateX(20px);
+      transition: opacity 0.3s 0.1s, transform 0.3s 0.1s;
+    }
+    .player-capsule:hover .extra-controls { opacity: 1; transform: translateX(0); }
+    .vol-track { width: 70px !important; }
 
     @media (max-width: 1100px) {
       .side-panel { display: none; }
-      .center-card { padding: 40px 20px; }
-      .quote-line { font-size: 20px; }
+      .top-panel { padding: 10px; flex-direction: column; gap: 10px; }
+      .center-card { padding: 40px 20px; margin-top: 80px; }
+      .player-capsule { width: 92%; max-width: 400px; bottom: 15px; }
+      .player-capsule:hover { width: 92%; }
+      .extra-controls { display: none; }
     }
 
-    /* 粒子 */
-    .sprite {
-      position: fixed; pointer-events: none; z-index: 5;
-      image-rendering: pixelated;
-    }
+    .sprite { position: fixed; pointer-events: none; z-index: 5; image-rendering: pixelated; }
   </style>
 </head>
 
 <body>
-  <!-- 音频核心 -->
-  <audio id="bgm-player" loop></audio>
+  <!-- 预加载模板 -->
+  <div id="sprite-templates">
+    <img src="assets/icon0.png" id="tpl-0">
+    <img src="assets/icon1.png" id="tpl-1">
+    <img src="assets/icon2.png" id="tpl-2">
+    <img src="assets/icon3.png" id="tpl-3">
+  </div>
 
+  <audio id="bgm-player"></audio>
   <div class="noise"></div>
 
+  <!-- 顶部专辑：星炬不熄 -->
+  <nav class="top-panel panel-bg">
+    <div class="top-album-info">
+      <span class="deco-pixel"></span> 星炬不熄
+    </div>
+    <ul class="song-list top-list" id="list-top">
+      <li data-src="music/Unwavering_Startorch(CN).mp3">星炬不熄</li>
+      <li data-src="music/Unwavering_Startorch(JP).mp3">絶やさぬスタートーチ</li>
+      <li data-src="music/Unwavering_Startorch(EN).mp3">Unwavering Startorch</li>
+      <li data-src="music/Unwavering_Startorch(KR).mp3">스타토치의 별빛 약속</li>
+    </ul>
+  </nav>
+
   <!-- 左侧专辑 -->
-  <aside class="side-panel left">
+  <aside class="side-panel panel-bg left">
     <h3 class="album-title"><span class="deco-pixel"></span> 飞行雪绒</h3>
     <ul class="song-list" id="list-left">
       <li data-src="music/Paper_Plane.mp3">纸飞机</li>
@@ -306,7 +292,7 @@
   </aside>
 
   <!-- 右侧专辑 -->
-  <aside class="side-panel right">
+  <aside class="side-panel panel-bg right">
     <h3 class="album-title">星轨消逝之夜 <span class="deco-pixel"></span></h3>
     <ul class="song-list" id="list-right">
       <li data-src="music/A_Small_Miracle.mp3">小小奇迹</li>
@@ -319,7 +305,7 @@
     <div class="center-card">
       <div class="corner tl"></div> <div class="corner tr"></div>
       <div class="corner bl"></div> <div class="corner br"></div>
-
+      
       <div class="cn-wrapper">
         <div class="quote-line line-1">但愿我会让你感到骄傲，</div>
         <div class="quote-line line-2">但愿我没有让你失望。</div>
@@ -328,90 +314,111 @@
     </div>
   </main>
 
-  <!-- 底部控制栏 -->
-  <div class="player-bar">
-    <button class="btn-control" id="btn-play">
-      <!-- Play Icon -->
-      <svg class="icon" id="icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-      <!-- Pause Icon (hidden by default) -->
-      <svg class="icon" id="icon-pause" viewBox="0 0 24 24" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
-    </button>
+  <!-- 胶囊播放器 -->
+  <div class="player-capsule">
+    <!-- 常驻控制区 -->
+    <div class="p-group">
+      <button class="btn-circle" id="btn-play-pause">
+        <svg class="icon-svg" id="icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        <svg class="icon-svg" id="icon-pause" viewBox="0 0 24 24" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+      </button>
+      
+      <div class="progress-container">
+        <input type="range" id="prog-bar" min="0" max="100" value="0" step="0.1">
+      </div>
+      
+      <span class="time-display" id="time-txt">00:00 / 00:00</span>
+    </div>
 
-    <div class="volume-wrap">
-      <span class="vol-label">VOL</span>
-      <input type="range" id="vol-slider" min="0" max="1" step="0.05" value="0.5">
+    <!-- 展开显示区：播放顺序 + 音量 -->
+    <div class="extra-controls">
+      <div class="p-divider"></div>
+      
+      <!-- 播放顺序按钮 -->
+      <button class="btn-circle" id="btn-order" title="Play Order">
+        <!-- List Loop (Default) -->
+        <svg class="icon-svg" id="icon-order-list" viewBox="0 0 24 24"><path d="M17 16l-4-4V8.82C14.16 8.4 15 7.3 15 6c0-1.66-1.34-3-3-3S9 4.34 9 6c0 1.3.84 2.4 2 2.82V12l-4 4H3v5h5v-3.05l4-4.2 4 4.2V21h5v-5h-4z"/><path d="M0 0h24v24H0z" fill="none"/></svg>
+        <!-- Single Loop -->
+        <svg class="icon-svg" id="icon-order-single" viewBox="0 0 24 24" style="display:none"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4zm-4-2V9h-1l-2 1v1h1.5v4H13z"/></svg>
+        <!-- Shuffle -->
+        <svg class="icon-svg" id="icon-order-shuffle" viewBox="0 0 24 24" style="display:none"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg>
+      </button>
+
+      <!-- 音量 -->
+      <svg class="icon-svg" viewBox="0 0 24 24" style="width:18px"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+      <input type="range" class="vol-track" id="vol-slider" min="0" max="1" step="0.05" value="0.5">
     </div>
   </div>
 
   <script>
-    // === 资源 ===
-    const ASSETS = [
-      'assets/icon0.png', 
-      'assets/icon1.png', 
-      'assets/icon2.png', 
-      'assets/icon3.png'
-    ];
-
-    // === 音频控制变量 ===
+    // === 1. 资源与DOM ===
     const audio = document.getElementById('bgm-player');
-    const allSongs = document.querySelectorAll('.song-list li');
-    const btnPlay = document.getElementById('btn-play');
+    // 合并所有列表：左 -> 右 -> 顶
+    const allSongs = Array.from(document.querySelectorAll('.song-list li'));
+    
+    // UI Elements
+    const btnPlayPause = document.getElementById('btn-play-pause');
     const iconPlay = document.getElementById('icon-play');
     const iconPause = document.getElementById('icon-pause');
+    const progBar = document.getElementById('prog-bar');
+    const timeTxt = document.getElementById('time-txt');
     const volSlider = document.getElementById('vol-slider');
-
-    // 状态
-    let currentSrc = "";
     
+    // Play Order Elements
+    const btnOrder = document.getElementById('btn-order');
+    const iconsOrder = [
+      document.getElementById('icon-order-list'),   // 0: List Loop
+      document.getElementById('icon-order-single'), // 1: Single Loop
+      document.getElementById('icon-order-shuffle') // 2: Shuffle
+    ];
+
+    let currentSongIndex = -1;
+    let isDraggingProgress = false;
+    let playMode = 0; // 0=List, 1=Single, 2=Shuffle
+
     // 初始化音量
     audio.volume = 0.5;
 
-    // === 核心播放函数 ===
-    function playTrack(src, liElement) {
-      // 1. UI: 更新侧边栏高亮
-      allSongs.forEach(el => el.classList.remove('active'));
-      if(liElement) liElement.classList.add('active');
+    // === 2. 播放核心逻辑 ===
+    function playIndex(index) {
+      if (index < 0 || index >= allSongs.length) return;
+      
+      const li = allSongs[index];
+      const src = li.getAttribute('data-src');
 
-      // 2. Audio: 切换源或继续播放
-      if (currentSrc !== src) {
-        currentSrc = src;
+      // 更新UI选中状态
+      allSongs.forEach(el => el.classList.remove('active'));
+      li.classList.add('active');
+      currentSongIndex = index;
+
+      if (audio.getAttribute('src') !== src) {
         audio.src = src;
         audio.load();
-        
-        // 尝试播放
-        const playPromise = audio.play();
-        if (playPromise !== undefined) {
-          playPromise.then(() => {
-            updatePlayBtnState(true);
-          }).catch(error => {
-            console.log("自动播放被拦截，等待用户点击控制栏");
-            updatePlayBtnState(false);
-          });
-        }
-      } else {
-        // 如果点的就是当前歌曲，则切换 暂停/播放
-        togglePlay();
       }
+      
+      audio.play().then(() => {
+        updatePlayState(true);
+      }).catch(e => {
+        console.log("需要交互才能播放");
+        updatePlayState(false);
+      });
     }
 
     function togglePlay() {
-      if (!currentSrc) {
-        // 如果还没选歌，默认放第一首
-        const firstSong = document.querySelector('.song-list li');
-        playTrack(firstSong.getAttribute('data-src'), firstSong);
+      if (currentSongIndex === -1) {
+        playIndex(0);
         return;
       }
-
       if (audio.paused) {
         audio.play();
-        updatePlayBtnState(true);
+        updatePlayState(true);
       } else {
         audio.pause();
-        updatePlayBtnState(false);
+        updatePlayState(false);
       }
     }
 
-    function updatePlayBtnState(isPlaying) {
+    function updatePlayState(isPlaying) {
       if (isPlaying) {
         iconPlay.style.display = 'none';
         iconPause.style.display = 'block';
@@ -421,99 +428,117 @@
       }
     }
 
-    // === 事件监听 ===
-
-    // 1. 点击歌单歌曲
-    allSongs.forEach(li => {
-      li.addEventListener('click', (e) => {
-        // 阻止事件冒泡，防止触发背景点击
-        e.stopPropagation();
-        const src = li.getAttribute('data-src');
-        playTrack(src, li);
+    // === 3. 播放顺序逻辑 ===
+    // 切换模式
+    btnOrder.addEventListener('click', (e) => {
+      e.stopPropagation();
+      playMode = (playMode + 1) % 3;
+      // 更新图标
+      iconsOrder.forEach((icon, i) => {
+        icon.style.display = (i === playMode) ? 'block' : 'none';
       });
     });
 
-    // 2. 底部控制栏按钮
-    btnPlay.addEventListener('click', (e) => {
+    // 播放结束处理
+    audio.addEventListener('ended', () => {
+      if (playMode === 1) {
+        // 单曲循环
+        audio.currentTime = 0;
+        audio.play();
+      } else if (playMode === 2) {
+        // 随机播放
+        let nextIndex;
+        do {
+          nextIndex = Math.floor(Math.random() * allSongs.length);
+        } while (nextIndex === currentSongIndex && allSongs.length > 1);
+        playIndex(nextIndex);
+      } else {
+        // 列表循环 (默认)
+        let nextIndex = currentSongIndex + 1;
+        if (nextIndex >= allSongs.length) nextIndex = 0;
+        playIndex(nextIndex);
+      }
+    });
+
+    // === 4. 时间与进度条 ===
+    const formatTime = (s) => {
+      if (isNaN(s)) return "00:00";
+      const min = Math.floor(s / 60) || 0;
+      const sec = Math.floor(s % 60) || 0;
+      return `${min.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`;
+    };
+
+    const updateTimeDisplay = () => {
+      const cur = audio.currentTime;
+      const dur = audio.duration;
+      timeTxt.textContent = `${formatTime(cur)} / ${formatTime(dur)}`;
+    };
+
+    audio.addEventListener('timeupdate', () => {
+      if (!isDraggingProgress && audio.duration) {
+        const pct = (audio.currentTime / audio.duration) * 100;
+        progBar.value = pct;
+        updateTimeDisplay();
+      }
+    });
+    
+    // 加载元数据后更新总时长
+    audio.addEventListener('loadedmetadata', updateTimeDisplay);
+
+    // 进度拖拽
+    progBar.addEventListener('input', (e) => {
+      isDraggingProgress = true;
+      const pct = e.target.value;
+      const time = (pct / 100) * audio.duration;
+      timeTxt.textContent = `${formatTime(time)} / ${formatTime(audio.duration)}`;
+    });
+    
+    progBar.addEventListener('change', (e) => {
+      isDraggingProgress = false;
+      if (audio.duration) {
+        audio.currentTime = (e.target.value / 100) * audio.duration;
+      }
+    });
+
+    // 音量与按钮绑定
+    volSlider.addEventListener('input', (e) => {
+      audio.volume = e.target.value;
+    });
+    
+    // 列表点击
+    allSongs.forEach((li, index) => {
+      li.addEventListener('click', (e) => {
+        e.stopPropagation();
+        playIndex(index);
+      });
+    });
+    
+    btnPlayPause.addEventListener('click', (e) => {
       e.stopPropagation();
       togglePlay();
     });
 
-    // 3. 音量滑块
-    volSlider.addEventListener('input', (e) => {
-      e.stopPropagation();
-      audio.volume = e.target.value;
-    });
-    // 防止拖动滑块时触发背景点击
-    volSlider.addEventListener('click', e => e.stopPropagation());
-
-    // 4. 全局背景点击 (如果未播放，点击背景播放第一首)
-    window.addEventListener('pointerdown', (e) => {
-      // 检查点击是否发生在控制栏或侧边栏内部，如果是则忽略
-      if (e.target.closest('.player-bar') || e.target.closest('.side-panel')) {
-        return; 
-      }
-
-      // 视觉效果
-      burst(e.clientX, e.clientY);
-      const card = document.querySelector('.center-card');
-      card.style.transform = "scale(0.98)";
-      setTimeout(() => card.style.transform = "", 100);
-
-      // 音频逻辑：如果不处于播放状态，尝试播放
-      if (!currentSrc && audio.paused) {
-        const firstSong = document.querySelector('.song-list li');
-        playTrack(firstSong.getAttribute('data-src'), firstSong);
-      }
-    });
-
-
-    // === 视觉特效 (坠落与爆散) ===
+    // === 5. 掉落物 (Clone Node优化) ===
+    const templates = [
+      document.getElementById('tpl-0'),
+      document.getElementById('tpl-1'),
+      document.getElementById('tpl-2'),
+      document.getElementById('tpl-3')
+    ];
+    let spawnInterval;
     const rand = (min, max) => Math.random() * (max - min) + min;
-    const sample = (arr) => arr[Math.floor(Math.random() * arr.length)];
-
-    function burst(x, y) {
-      const count = 8;
-      for (let i = 0; i < count; i++) {
-        const p = document.createElement('img');
-        p.src = sample(ASSETS);
-        p.className = 'sprite';
-        p.style.left = `${x}px`;
-        p.style.top = `${y}px`;
-        p.style.zIndex = "20"; 
-        document.body.appendChild(p);
-
-        const angle = rand(0, Math.PI * 2);
-        const velocity = rand(4, 9);
-        let vx = Math.cos(angle) * velocity;
-        let vy = Math.sin(angle) * velocity;
-        let life = 1.0;
-        let rot = rand(0, 360);
-        
-        function tick() {
-          let cx = parseFloat(p.style.left);
-          let cy = parseFloat(p.style.top);
-          p.style.left = (cx + vx) + 'px';
-          p.style.top = (cy + vy) + 'px';
-          vx *= 0.95; vy *= 0.95; vy += 0.15;
-          rot += 3; life -= 0.02;
-          p.style.transform = `translate(-50%, -50%) rotate(${rot}deg)`;
-          p.style.opacity = life;
-          if (life > 0) requestAnimationFrame(tick);
-          else p.remove();
-        }
-        requestAnimationFrame(tick);
-      }
-    }
 
     function createFaller() {
-      const img = document.createElement('img');
-      img.src = sample(ASSETS);
+      const tpl = templates[Math.floor(Math.random() * templates.length)];
+      const img = tpl.cloneNode(true);
+      img.removeAttribute('id');
       img.className = 'sprite';
+      
       const startX = rand(0, window.innerWidth);
       img.style.left = `${startX}px`;
       img.style.top = `-120px`; 
       img.style.opacity = rand(0.5, 0.9);
+      
       document.body.appendChild(img);
 
       let y = -120;
@@ -524,6 +549,7 @@
       let rotationSpeed = rand(-1, 1);
 
       function update() {
+        if(!img.parentNode) return;
         y += speed;
         x += Math.sin(y * 0.015 + drift) * 0.6; 
         rotation += rotationSpeed;
@@ -533,7 +559,57 @@
       }
       requestAnimationFrame(update);
     }
-    setInterval(createFaller, 350);
+
+    function startRain() {
+      if(!spawnInterval) spawnInterval = setInterval(createFaller, 350);
+    }
+    function stopRain() {
+      if(spawnInterval) { clearInterval(spawnInterval); spawnInterval = null; }
+    }
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) stopRain();
+      else startRain();
+    });
+    startRain();
+
+    // 背景点击
+    window.addEventListener('pointerdown', (e) => {
+      if (e.target.closest('.player-capsule') || e.target.closest('.panel-bg')) return;
+      
+      // 粒子爆散
+      const count = 8;
+      for(let i=0; i<count; i++){
+        const p = templates[Math.floor(Math.random()*templates.length)].cloneNode(true);
+        p.removeAttribute('id'); p.className='sprite';
+        p.style.left = e.clientX+'px'; p.style.top = e.clientY+'px';
+        document.body.appendChild(p);
+        // 简单物理模拟
+        const angle = rand(0, Math.PI*2);
+        const v = rand(4,9);
+        let vx = Math.cos(angle)*v, vy = Math.sin(angle)*v;
+        let life=1.0, rot=rand(0,360);
+        function tick(){
+          if(!p.parentNode) return;
+          let cx=parseFloat(p.style.left), cy=parseFloat(p.style.top);
+          p.style.left=(cx+vx)+'px'; p.style.top=(cy+vy)+'px';
+          vx*=0.95; vy*=0.95; vy+=0.15; rot+=3; life-=0.02;
+          p.style.transform=`translate(-50%,-50%) rotate(${rot}deg)`;
+          p.style.opacity=life;
+          if(life>0) requestAnimationFrame(tick);
+          else p.remove();
+        }
+        requestAnimationFrame(tick);
+      }
+
+      // 卡片反馈
+      const card = document.querySelector('.center-card');
+      card.style.transform = "scale(0.98)";
+      setTimeout(() => card.style.transform = "", 100);
+
+      // 默认播放
+      if (!audio.src && audio.paused) playIndex(0);
+    });
   </script>
 </body>
 </html>
