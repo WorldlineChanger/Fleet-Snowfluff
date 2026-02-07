@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Fleet Snowfluff - Aemeath</title>
+  <link rel="icon" href="assets/Fleet_Snowfluff.png" type="image/png">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-deep: #0f1123;
+      --bg-light: #242446;
+      --accent-pink: #ffb7c5;
+      --accent-blue: #a0c4ff;
+      --text-glow: #e0e6ff;
+      --glass: rgba(18, 20, 40, 0.65);
+      --border: rgba(160, 196, 255, 0.3);
+    }
+
+    * { box-sizing: border-box; }
+    
+    html, body {
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background-color: var(--bg-deep);
+      background-image: 
+        radial-gradient(circle at 50% 0%, #3a3a6a 0%, transparent 60%),
+        linear-gradient(180deg, var(--bg-deep) 0%, #1a1a2e 100%);
+      font-family: 'DotGothic16', sans-serif;
+      color: var(--text-glow);
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      /* 自定义光标 */
+      cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="%23a0c4ff" d="M11 0h2v9h-2zM11 15h2v9h-2zM0 11h9v2H0zM15 11h9v2h-9zM11 11h2v2h-2z"/><path fill="rgba(0,0,0,0.5)" d="M12 9h1v2h-1zM13 12h2v1h-2zM12 13h-1v2h1zM9 12h2v-1h-2z"/></svg>') 12 12, crosshair;
+    }
+
+    /* 噪点层 */
+    .noise {
+      position: fixed; inset: 0;
+      background: url('data:image/svg+xml;utf8,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noiseFilter"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noiseFilter)" opacity="0.04"/%3E%3C/svg%3E');
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* 主布局容器 */
+    .container {
+      position: relative;
+      height: 100%;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+    }
+
+    /* === 中间卡片 === */
+    .center-card {
+      position: relative;
+      max-width: 760px;
+      padding: 60px 50px;
+      background: var(--glass);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      animation: float 6s ease-in-out infinite;
+      box-shadow: 0 10px 50px rgba(0,0,0,0.5);
+      z-index: 12;
+      transition: transform 0.1s;
+    }
+
+    .corner {
+      position: absolute;
+      width: 6px; height: 6px;
+      background: var(--accent-pink);
+      box-shadow: 0 0 6px var(--accent-pink);
+    }
+    .tl { top: -1px; left: -1px; } .tr { top: -1px; right: -1px; }
+    .bl { bottom: -1px; left: -1px; } .br { bottom: -1px; right: -1px; }
+
+    /* 两行交错文字 */
+    .cn-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      margin-bottom: 36px;
+    }
+    .quote-line {
+      font-size: clamp(24px, 3.5vw, 36px);
+      color: #fff;
+      text-shadow: 2px 2px 0px rgba(0,0,0,0.8), 0 0 15px var(--accent-blue);
+      letter-spacing: 2px;
+      white-space: nowrap;
+    }
+    .line-1 { align-self: flex-start; margin-left: 10px; }
+    .line-2 { align-self: flex-end; margin-right: 10px; }
+
+    .quote-en {
+      font-size: clamp(12px, 1.5vw, 16px);
+      margin: 0;
+      color: var(--accent-blue);
+      opacity: 0.8;
+      letter-spacing: 1px;
+      text-shadow: 1px 1px 0px rgba(0,0,0,0.8);
+      text-align: center;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-8px); }
+    }
+
+    /* === 侧边歌单栏 === */
+    .side-panel {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 280px;
+      padding: 24px;
+      background: linear-gradient(180deg, rgba(18,20,40,0.5) 0%, rgba(18,20,40,0.2) 100%);
+      border-left: 1px solid var(--border);
+      backdrop-filter: blur(4px);
+      z-index: 20; /* 提高层级，确保能点到 */
+      transition: opacity 0.3s;
+    }
+    .side-panel.left {
+      left: 40px;
+      border-left: 3px solid var(--accent-pink);
+      text-align: left;
+      border-radius: 0 8px 8px 0;
+    }
+    .side-panel.right {
+      right: 40px;
+      border-left: 0;
+      border-right: 3px solid var(--accent-blue);
+      text-align: right;
+      border-radius: 8px 0 0 8px;
+    }
+
+    .album-title {
+      font-size: 18px;
+      margin: 0 0 16px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: bold;
+    }
+    .side-panel.left .album-title { color: var(--accent-pink); text-shadow: 0 0 8px rgba(255,183,197,0.4); }
+    .side-panel.right .album-title { color: var(--accent-blue); text-shadow: 0 0 8px rgba(160,196,255,0.4); justify-content: flex-end; }
+
+    .deco-pixel {
+      min-width: 8px; width: 8px; height: 8px;
+      background: currentColor;
+      box-shadow: 0 0 5px currentColor;
+    }
+
+    .song-list { list-style: none; padding: 0; margin: 0; }
+    .song-list li {
+      font-size: 15px;
+      color: var(--text-glow);
+      opacity: 0.6;
+      margin-bottom: 12px;
+      padding: 6px 0;
+      cursor: pointer; /* 确保鼠标变成手型 */
+      transition: all 0.2s ease-out;
+      display: flex;
+      align-items: center;
+    }
+    .side-panel.right .song-list li { justify-content: flex-end; }
+
+    /* === 交互效果：Hover === */
+    .song-list li:hover {
+      opacity: 1;
+      transform: translateX(8px);
+      text-shadow: 0 0 10px var(--accent-pink);
+    }
+    .side-panel.right .song-list li:hover {
+      transform: translateX(-8px);
+      text-shadow: 0 0 10px var(--accent-blue);
+    }
+
+    /* === 交互效果：Active (播放中) === */
+    .song-list li.active {
+      opacity: 1;
+      color: #fff;
+      font-weight: bold;
+      text-shadow: 0 0 5px currentColor;
+    }
+    /* 播放指示器 (左) */
+    .side-panel.left .song-list li.active::before {
+      content: "►"; /* 像素箭头 */
+      margin-right: 8px;
+      color: var(--accent-pink);
+      font-size: 12px;
+      animation: blink 1.2s infinite;
+    }
+    /* 播放指示器 (右) */
+    .side-panel.right .song-list li.active::after {
+      content: "◄";
+      margin-left: 8px;
+      color: var(--accent-blue);
+      font-size: 12px;
+      animation: blink 1.2s infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+
+    /* === 底部播放控制栏 === */
+    .player-bar {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 10px 24px;
+      background: rgba(15, 17, 35, 0.85);
+      border: 1px solid var(--border);
+      border-radius: 50px;
+      backdrop-filter: blur(10px);
+      z-index: 100;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+    }
+
+    .btn-control {
+      background: none;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 50%;
+      width: 36px; height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--text-glow);
+      transition: all 0.2s;
+    }
+    .btn-control:hover {
+      background: rgba(255,255,255,0.1);
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 8px var(--accent-blue);
+      transform: scale(1.1);
+    }
+    /* 播放/暂停图标 SVG */
+    .icon { width: 14px; height: 14px; fill: currentColor; }
+
+    /* 音量条 */
+    .volume-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .vol-label { font-size: 12px; color: var(--accent-blue); }
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 80px;
+      background: transparent;
+    }
+    input[type=range]::-webkit-slider-runnable-track {
+      width: 100%; height: 4px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 2px;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      height: 12px; width: 6px;
+      border-radius: 2px;
+      background: var(--accent-pink);
+      margin-top: -4px;
+      cursor: pointer;
+      box-shadow: 0 0 5px var(--accent-pink);
+    }
+
+    @media (max-width: 1100px) {
+      .side-panel { display: none; }
+      .center-card { padding: 40px 20px; }
+      .quote-line { font-size: 20px; }
+    }
+
+    /* 粒子 */
+    .sprite {
+      position: fixed; pointer-events: none; z-index: 5;
+      image-rendering: pixelated;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- 音频核心 -->
+  <audio id="bgm-player" loop></audio>
+
+  <div class="noise"></div>
+
+  <!-- 左侧专辑 -->
+  <aside class="side-panel left">
+    <h3 class="album-title"><span class="deco-pixel"></span> 飞行雪绒</h3>
+    <ul class="song-list" id="list-left">
+      <li data-src="music/Paper_Plane.mp3">纸飞机</li>
+      <li data-src="music/Indigo_Universe.mp3">靛青宇宙</li>
+      <li data-src="music/Fallen_Petals.mp3">碎花</li>
+    </ul>
+  </aside>
+
+  <!-- 右侧专辑 -->
+  <aside class="side-panel right">
+    <h3 class="album-title">星轨消逝之夜 <span class="deco-pixel"></span></h3>
+    <ul class="song-list" id="list-right">
+      <li data-src="music/A_Small_Miracle.mp3">小小奇迹</li>
+      <li data-src="music/Voyaging_Stars_Farewell.mp3">远航星的告别</li>
+      <li data-src="music/Vernal_Days_Dreamed_by_the_Star.mp3">那颗星梦见的春日</li>
+    </ul>
+  </aside>
+
+  <main class="container">
+    <div class="center-card">
+      <div class="corner tl"></div> <div class="corner tr"></div>
+      <div class="corner bl"></div> <div class="corner br"></div>
+
+      <div class="cn-wrapper">
+        <div class="quote-line line-1">但愿我会让你感到骄傲，</div>
+        <div class="quote-line line-2">但愿我没有让你失望。</div>
+      </div>
+      <p class="quote-en">I hope to make you proud. I hope I haven't let you down.</p>
+    </div>
+  </main>
+
+  <!-- 底部控制栏 -->
+  <div class="player-bar">
+    <button class="btn-control" id="btn-play">
+      <!-- Play Icon -->
+      <svg class="icon" id="icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+      <!-- Pause Icon (hidden by default) -->
+      <svg class="icon" id="icon-pause" viewBox="0 0 24 24" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+    </button>
+
+    <div class="volume-wrap">
+      <span class="vol-label">VOL</span>
+      <input type="range" id="vol-slider" min="0" max="1" step="0.05" value="0.5">
+    </div>
+  </div>
+
+  <script>
+    // === 资源 ===
+    const ASSETS = [
+      'assets/icon0.png', 
+      'assets/icon1.png', 
+      'assets/icon2.png', 
+      'assets/icon3.png'
+    ];
+
+    // === 音频控制变量 ===
+    const audio = document.getElementById('bgm-player');
+    const allSongs = document.querySelectorAll('.song-list li');
+    const btnPlay = document.getElementById('btn-play');
+    const iconPlay = document.getElementById('icon-play');
+    const iconPause = document.getElementById('icon-pause');
+    const volSlider = document.getElementById('vol-slider');
+
+    // 状态
+    let currentSrc = "";
+    
+    // 初始化音量
+    audio.volume = 0.5;
+
+    // === 核心播放函数 ===
+    function playTrack(src, liElement) {
+      // 1. UI: 更新侧边栏高亮
+      allSongs.forEach(el => el.classList.remove('active'));
+      if(liElement) liElement.classList.add('active');
+
+      // 2. Audio: 切换源或继续播放
+      if (currentSrc !== src) {
+        currentSrc = src;
+        audio.src = src;
+        audio.load();
+        
+        // 尝试播放
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+          playPromise.then(() => {
+            updatePlayBtnState(true);
+          }).catch(error => {
+            console.log("自动播放被拦截，等待用户点击控制栏");
+            updatePlayBtnState(false);
+          });
+        }
+      } else {
+        // 如果点的就是当前歌曲，则切换 暂停/播放
+        togglePlay();
+      }
+    }
+
+    function togglePlay() {
+      if (!currentSrc) {
+        // 如果还没选歌，默认放第一首
+        const firstSong = document.querySelector('.song-list li');
+        playTrack(firstSong.getAttribute('data-src'), firstSong);
+        return;
+      }
+
+      if (audio.paused) {
+        audio.play();
+        updatePlayBtnState(true);
+      } else {
+        audio.pause();
+        updatePlayBtnState(false);
+      }
+    }
+
+    function updatePlayBtnState(isPlaying) {
+      if (isPlaying) {
+        iconPlay.style.display = 'none';
+        iconPause.style.display = 'block';
+      } else {
+        iconPlay.style.display = 'block';
+        iconPause.style.display = 'none';
+      }
+    }
+
+    // === 事件监听 ===
+
+    // 1. 点击歌单歌曲
+    allSongs.forEach(li => {
+      li.addEventListener('click', (e) => {
+        // 阻止事件冒泡，防止触发背景点击
+        e.stopPropagation();
+        const src = li.getAttribute('data-src');
+        playTrack(src, li);
+      });
+    });
+
+    // 2. 底部控制栏按钮
+    btnPlay.addEventListener('click', (e) => {
+      e.stopPropagation();
+      togglePlay();
+    });
+
+    // 3. 音量滑块
+    volSlider.addEventListener('input', (e) => {
+      e.stopPropagation();
+      audio.volume = e.target.value;
+    });
+    // 防止拖动滑块时触发背景点击
+    volSlider.addEventListener('click', e => e.stopPropagation());
+
+    // 4. 全局背景点击 (如果未播放，点击背景播放第一首)
+    window.addEventListener('pointerdown', (e) => {
+      // 检查点击是否发生在控制栏或侧边栏内部，如果是则忽略
+      if (e.target.closest('.player-bar') || e.target.closest('.side-panel')) {
+        return; 
+      }
+
+      // 视觉效果
+      burst(e.clientX, e.clientY);
+      const card = document.querySelector('.center-card');
+      card.style.transform = "scale(0.98)";
+      setTimeout(() => card.style.transform = "", 100);
+
+      // 音频逻辑：如果不处于播放状态，尝试播放
+      if (!currentSrc && audio.paused) {
+        const firstSong = document.querySelector('.song-list li');
+        playTrack(firstSong.getAttribute('data-src'), firstSong);
+      }
+    });
+
+
+    // === 视觉特效 (坠落与爆散) ===
+    const rand = (min, max) => Math.random() * (max - min) + min;
+    const sample = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+    function burst(x, y) {
+      const count = 8;
+      for (let i = 0; i < count; i++) {
+        const p = document.createElement('img');
+        p.src = sample(ASSETS);
+        p.className = 'sprite';
+        p.style.left = `${x}px`;
+        p.style.top = `${y}px`;
+        p.style.zIndex = "20"; 
+        document.body.appendChild(p);
+
+        const angle = rand(0, Math.PI * 2);
+        const velocity = rand(4, 9);
+        let vx = Math.cos(angle) * velocity;
+        let vy = Math.sin(angle) * velocity;
+        let life = 1.0;
+        let rot = rand(0, 360);
+        
+        function tick() {
+          let cx = parseFloat(p.style.left);
+          let cy = parseFloat(p.style.top);
+          p.style.left = (cx + vx) + 'px';
+          p.style.top = (cy + vy) + 'px';
+          vx *= 0.95; vy *= 0.95; vy += 0.15;
+          rot += 3; life -= 0.02;
+          p.style.transform = `translate(-50%, -50%) rotate(${rot}deg)`;
+          p.style.opacity = life;
+          if (life > 0) requestAnimationFrame(tick);
+          else p.remove();
+        }
+        requestAnimationFrame(tick);
+      }
+    }
+
+    function createFaller() {
+      const img = document.createElement('img');
+      img.src = sample(ASSETS);
+      img.className = 'sprite';
+      const startX = rand(0, window.innerWidth);
+      img.style.left = `${startX}px`;
+      img.style.top = `-120px`; 
+      img.style.opacity = rand(0.5, 0.9);
+      document.body.appendChild(img);
+
+      let y = -120;
+      let x = startX;
+      let speed = rand(1, 2.0);
+      let drift = rand(0, 360);
+      let rotation = rand(0, 360);
+      let rotationSpeed = rand(-1, 1);
+
+      function update() {
+        y += speed;
+        x += Math.sin(y * 0.015 + drift) * 0.6; 
+        rotation += rotationSpeed;
+        img.style.transform = `translate(${x - startX}px, ${y}px) rotate(${rotation}deg)`;
+        if (y < window.innerHeight + 100) requestAnimationFrame(update);
+        else img.remove();
+      }
+      requestAnimationFrame(update);
+    }
+    setInterval(createFaller, 350);
+  </script>
+</body>
+</html>
