@@ -21,9 +21,12 @@
       --glass: rgba(18, 20, 40, 0.75);
       --glass-mobile: rgba(18, 20, 40, 0.90);
       --border: rgba(160, 196, 255, 0.3);
+      --z-noise: 1;
+      --z-sprite: 5;
+      --z-card: 10;
+      --z-panel: 20;
       --z-nav: 50;
       --z-ui: 100;
-      --z-card: 10;
     }
 
     * {
@@ -52,10 +55,10 @@
       inset: 0;
       background: url('data:image/svg+xml;utf8,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noiseFilter"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noiseFilter)" opacity="0.04"/%3E%3C/svg%3E');
       pointer-events: none;
-      z-index: 1;
+      z-index: var(--z-noise);
     }
 
-    /* === 1. 顶部真实 Header === */
+    /* === Header === */
     .site-header {
       position: fixed;
       top: 0;
@@ -66,11 +69,9 @@
       align-items: flex-start;
       justify-content: space-between;
       padding: 15px 40px;
-      /* 只有Logo区域需要背景吗？不，整个条应该透明让中间专辑看起来贴顶 */
       background: linear-gradient(180deg, rgba(15, 17, 35, 0.8) 0%, rgba(15, 17, 35, 0) 100%);
       z-index: var(--z-nav);
       pointer-events: none;
-      /* 让中间区域的点击穿透 */
     }
 
     .brand-area {
@@ -80,16 +81,14 @@
     }
 
     .brand-title {
-      font-size: 24px;
+      font-family: 'DotGothic16', sans-serif;
+      font-size: 26px;
       font-weight: bold;
       color: var(--accent-blue);
       letter-spacing: 1px;
-      /* 像素风粉色描边：利用不模糊的 text-shadow */
       text-shadow:
-        2px 0 var(--accent-pink), -2px 0 var(--accent-pink),
-        0 2px var(--accent-pink), 0 -2px var(--accent-pink),
-        2px 2px var(--accent-pink), -2px -2px var(--accent-pink),
-        2px -2px var(--accent-pink), -2px 2px var(--accent-pink);
+        2px 0 0 var(--accent-pink), -2px 0 0 var(--accent-pink),
+        0 2px 0 var(--accent-pink), 0 -2px 0 var(--accent-pink);
     }
 
     .brand-sub {
@@ -104,6 +103,7 @@
     .music-panel {
       background: var(--glass);
       backdrop-filter: blur(8px);
+      /* 这里的模糊会作用于后方的粒子 */
       -webkit-backdrop-filter: blur(8px);
       border: 1px solid rgba(255, 255, 255, 0.08);
       padding: 20px;
@@ -122,7 +122,7 @@
       top: -2px;
     }
 
-    /* === 歌曲列表样式 (含 Requirement 1: 箭头+样式共存) === */
+    /* === 歌曲列表样式 === */
     .song-list {
       list-style: none;
       padding: 0;
@@ -140,7 +140,6 @@
       display: flex;
       flex-direction: column;
       border: 1px solid transparent;
-      /* 预留边框防止跳动 */
     }
 
     .song-title {
@@ -155,22 +154,20 @@
     .song-en {
       font-size: 11px;
       color: var(--accent-blue);
-      opacity: 0.4;
+      opacity: 0.5;
       margin-top: 2px;
       text-transform: uppercase;
-      font-family: sans-serif;
+      font-family: 'DotGothic16', sans-serif;
+      letter-spacing: 0.5px;
     }
 
-    /* 悬停 */
     .song-list li:hover .song-title {
       opacity: 1;
       text-shadow: 0 0 8px currentColor;
     }
 
-    /* 激活状态：既有样式，也有箭头 */
     .song-list li.active {
       border-color: rgba(255, 255, 255, 0.1);
-      /* 之前的美化样式 */
     }
 
     .song-list li.active .song-title {
@@ -181,7 +178,7 @@
     }
 
     .song-list li.active .song-en {
-      opacity: 0.8;
+      opacity: 0.9;
       color: #fff;
     }
 
@@ -239,10 +236,7 @@
       content: none;
     }
 
-
-    /* === 2. 布局定位 (PC) === */
-
-    /* 顶部专辑：星炬不熄 (贴顶) */
+    /* === 布局定位 (PC) === */
     .panel-top {
       position: fixed;
       top: 0;
@@ -281,8 +275,11 @@
       font-weight: bold;
     }
 
+    .panel-top .album-header .deco-pixel {
+      margin-right: 10px;
+    }
+
     .panel-top .album-header span {
-      display: block;
       background: linear-gradient(90deg, var(--accent-pink), var(--accent-blue));
       -webkit-background-clip: text;
       background-clip: text;
@@ -291,8 +288,8 @@
 
     .panel-top .album-header small {
       display: block;
-      font-size: 10px;
-      opacity: 0.6;
+      font-size: 12px;
+      opacity: 0.7;
       margin-top: 4px;
       color: var(--text-glow);
     }
@@ -310,11 +307,6 @@
       background: none !important;
     }
 
-    .panel-top .song-list li.active .song-title {
-      text-shadow: 0 0 15px #fff;
-    }
-
-    /* 顶部列表箭头修正：不用左右箭头，用下方点缀或上方点缀 */
     .panel-top .song-list li.active::before {
       content: '▼';
       left: 50%;
@@ -332,13 +324,12 @@
       width: 280px;
       border-left: 3px solid var(--accent-pink);
       border-radius: 0 12px 12px 0;
-      z-index: 20;
+      z-index: var(--z-panel);
     }
 
     /* 方块在左 */
     .panel-left .album-header .deco-pixel {
       margin-right: 8px;
-      margin-left: 0;
     }
 
     .panel-left .album-header {
@@ -368,13 +359,12 @@
       text-align: right;
       border-right: 3px solid var(--accent-blue);
       border-radius: 12px 0 0 12px;
-      z-index: 20;
+      z-index: var(--z-panel);
     }
 
     /* 方块在右 */
     .panel-right .album-header .deco-pixel {
       margin-left: 8px;
-      margin-right: 0;
     }
 
     .panel-right .album-header {
@@ -398,7 +388,7 @@
       align-items: flex-end;
     }
 
-    /* === 3. 中间文字 (Requirement 4 & 5) === */
+    /* === 中间文字 === */
     .center-container {
       position: absolute;
       inset: 0;
@@ -411,7 +401,6 @@
 
     .center-card {
       position: relative;
-      /* 恢复较小尺寸 */
       width: 680px;
       max-width: 90%;
       padding: 50px 40px;
@@ -460,7 +449,6 @@
 
     .quote-line {
       font-size: clamp(20px, 3vw, 32px);
-      /* 尺寸改回适中 */
       letter-spacing: 2px;
       white-space: nowrap;
       position: relative;
@@ -514,14 +502,13 @@
     }
 
     .quote-en {
+      font-family: 'DotGothic16', sans-serif;
       font-size: clamp(12px, 1.5vw, 14px);
       color: var(--accent-blue);
       opacity: 0.8;
       text-align: center;
-      /* 调整字间距以匹配中文宽度 */
       letter-spacing: 0.5px;
-      line-height: 1.6;
-      font-family: monospace;
+      white-space: nowrap;
     }
 
     @keyframes float {
@@ -536,8 +523,7 @@
       }
     }
 
-
-    /* === 4. 播放器 (PC) === */
+    /* === 播放器 (PC) === */
     .player-capsule {
       position: fixed;
       bottom: 30px;
@@ -556,7 +542,6 @@
       padding: 0 14px;
       transition: width 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), border-color 0.3s;
       overflow: hidden;
-      /* PC端保持隐藏溢出以做动画 */
     }
 
     .player-capsule:hover {
@@ -683,7 +668,7 @@
       width: 70px !important;
     }
 
-    /* === 5. 移动端/竖屏重构 (Requirement 5 & 7) === */
+    /* === 移动端/竖屏 === */
     @media (max-width: 1100px) {
 
       html,
@@ -694,7 +679,6 @@
         position: relative;
       }
 
-      /* Header: 仅保留Logo */
       .site-header {
         position: relative;
         background: rgba(15, 17, 35, 0.95);
@@ -706,25 +690,19 @@
       }
 
       .brand-title {
-        font-size: 28px;
+        font-size: 30px;
+        text-shadow: 2px 2px 0 var(--accent-pink);
       }
 
-      /* 手机端大一点Logo */
-
-      /* 布局流 */
       .main-wrapper {
         display: flex;
         flex-direction: column;
         align-items: center;
         gap: 20px;
         padding-bottom: 140px;
-        /* 底部给播放器留空间 */
         padding-top: 10px;
       }
 
-      /* 顺序控制：文字 -> 星炬 -> 飞行 -> 星轨 */
-
-      /* 1. 文字卡片 */
       .center-container {
         position: relative;
         inset: auto;
@@ -753,10 +731,11 @@
       }
 
       .quote-en {
+        white-space: normal;
         margin-top: 10px;
+        line-height: 1.4;
       }
 
-      /* 通用手机面板 */
       .mobile-panel-base {
         position: relative;
         top: auto;
@@ -773,10 +752,8 @@
         padding: 15px;
       }
 
-      /* 2. 星炬不熄 (Top) */
       .panel-top {
         order: 2;
-        /* 排在文字后 */
         @extend .mobile-panel-base;
         position: relative;
         top: auto;
@@ -789,7 +766,6 @@
         background-image: linear-gradient(var(--glass-mobile), var(--glass-mobile)), linear-gradient(90deg, var(--accent-pink), var(--accent-blue));
         padding: 15px;
         display: block;
-        /* 取消flex centering */
       }
 
       .top-layout {
@@ -807,11 +783,10 @@
       }
 
       .panel-top .album-header .deco-pixel {
-        display: inline-block;
         margin-right: 8px;
+        order: -1;
       }
 
-      /* 添加方块 */
       .panel-top .song-list {
         flex-direction: column;
         gap: 10px;
@@ -833,9 +808,6 @@
         content: none;
       }
 
-      /* 手机移除顶部小三角 */
-
-      /* 3. 飞行雪绒 (Left) */
       .panel-left {
         order: 3;
         position: relative;
@@ -848,7 +820,6 @@
         border-radius: 8px;
       }
 
-      /* 4. 星轨消逝 (Right) */
       .panel-right {
         order: 4;
         position: relative;
@@ -860,7 +831,6 @@
         border-right: 3px solid var(--accent-blue);
         border-radius: 8px;
         text-align: left;
-        /* 手机改为左对齐 */
       }
 
       .panel-right .album-header {
@@ -873,7 +843,6 @@
         order: -1;
       }
 
-      /* 方块移左 */
       .panel-right .song-list li {
         align-items: flex-start;
       }
@@ -882,7 +851,6 @@
         content: none;
       }
 
-      /* 移除右箭头 */
       .panel-right .song-list li.active::before {
         content: '►';
         left: -8px;
@@ -892,7 +860,6 @@
         color: var(--accent-blue);
       }
 
-      /* === 手机端播放器重构 (Requirement 7) === */
       .player-capsule {
         width: 96%;
         max-width: 500px;
@@ -902,14 +869,12 @@
         border-radius: 12px;
         flex-direction: column;
         overflow: visible;
-        /* 允许阴影 */
       }
 
       .player-capsule:hover {
         width: 96%;
       }
 
-      /* 第一行：进度条 (全宽) */
       .progress-wrapper {
         width: 100%;
         margin-bottom: 8px;
@@ -920,9 +885,6 @@
         transform: scale(1.2);
       }
 
-      /* 更大的触摸点 */
-
-      /* 第二行：控制按钮 + 时间 + 顺序 */
       .p-main {
         width: 100%;
         justify-content: space-between;
@@ -938,7 +900,6 @@
         flex-grow: 1;
       }
 
-      /* 顺序按钮：常驻显示在右下 */
       .extra-controls {
         display: flex;
         width: auto;
@@ -951,17 +912,17 @@
         border: none;
       }
 
-      /* 手机隐藏音量 */
       .vol-svg,
       .vol-track {
         display: none;
       }
     }
 
+    /* z-index设为5，使其位于背景(1)和面板(10+)之间 */
     .sprite {
       position: fixed;
       pointer-events: none;
-      z-index: 150;
+      z-index: var(--z-sprite);
       image-rendering: pixelated;
       will-change: transform, opacity;
     }
@@ -969,7 +930,6 @@
 </head>
 
 <body>
-  <!-- 预加载 -->
   <div id="sprite-templates" style="display:none">
     <img src="assets/icon0.png" id="tpl-0">
     <img src="assets/icon1.png" id="tpl-1">
@@ -989,7 +949,7 @@
   </header>
 
   <div class="main-wrapper">
-    <!-- 1. 顶部专辑 (PC: Top Center / Mobile: Order 2) -->
+    <!-- 1. 顶部专辑 -->
     <nav class="music-panel panel-top">
       <div class="top-layout">
         <div class="album-header">
@@ -999,25 +959,25 @@
         <ul class="song-list" id="list-top">
           <li data-src="music/Unwavering_Startorch(CN).mp3">
             <div class="song-title">星炬不熄</div>
-            <div class="song-en">Original Ver.</div>
+            <div class="song-en">CN Ver.</div>
           </li>
           <li data-src="music/Unwavering_Startorch(JP).mp3">
             <div class="song-title">絶やさぬスタートーチ</div>
-            <div class="song-en">Japanese Ver.</div>
+            <div class="song-en">JP Ver.</div>
           </li>
           <li data-src="music/Unwavering_Startorch(EN).mp3">
             <div class="song-title">Unwavering Startorch</div>
-            <div class="song-en">English Ver.</div>
+            <div class="song-en">EN Ver.</div>
           </li>
           <li data-src="music/Unwavering_Startorch(KR).mp3">
             <div class="song-title">스타토치의 별빛 약속</div>
-            <div class="song-en">Korean Ver.</div>
+            <div class="song-en">KR Ver.</div>
           </li>
         </ul>
       </div>
     </nav>
 
-    <!-- 2. 中间卡片 (PC: Center / Mobile: Order 1) -->
+    <!-- 2. 中间卡片 -->
     <div class="center-container">
       <div class="center-card">
         <div class="corner tl"></div>
@@ -1026,15 +986,14 @@
         <div class="corner br"></div>
 
         <div class="cn-wrapper">
-          <!-- JS 将把这里拆分为 span.glow-char -->
           <div class="quote-line line-1" id="q-line-1">但愿我会让你感到骄傲，</div>
           <div class="quote-line line-2" id="q-line-2">但愿我没有让你失望。</div>
         </div>
-        <p class="quote-en">I hope to make you proud.<br>I hope I haven't let you down.</p>
+        <p class="quote-en">I hope to make you proud. I hope I haven't let you down.</p>
       </div>
     </div>
 
-    <!-- 3. 左侧专辑 (PC: Left / Mobile: Order 3) -->
+    <!-- 3. 左侧专辑 -->
     <aside class="music-panel panel-left">
       <h3 class="album-header">
         <span class="deco-pixel"></span> 飞行雪绒
@@ -1056,7 +1015,7 @@
       </ul>
     </aside>
 
-    <!-- 4. 右侧专辑 (PC: Right / Mobile: Order 4) -->
+    <!-- 4. 右侧专辑 -->
     <aside class="music-panel panel-right">
       <h3 class="album-header">
         星轨消逝之夜 <span class="deco-pixel"></span>
@@ -1081,7 +1040,6 @@
 
   <!-- 胶囊播放器 -->
   <div class="player-capsule">
-    <!-- PC: 左部分 | Mobile: 第二行 -->
     <div class="p-main">
       <button class="btn-circle" id="btn-play-pause">
         <svg class="icon-svg" id="icon-play" viewBox="0 0 24 24">
@@ -1092,7 +1050,6 @@
         </svg>
       </button>
 
-      <!-- PC: 中间进度条 | Mobile: 独立第一行 -->
       <div class="progress-wrapper">
         <div class="progress-track">
           <input type="range" id="prog-bar" min="0" max="100" value="0" step="0.1">
@@ -1102,7 +1059,6 @@
       <span class="time-display" id="time-txt">00:00 / 00:00</span>
     </div>
 
-    <!-- PC: 右侧展开 | Mobile: 右下角常驻 -->
     <div class="extra-controls">
       <button class="btn-circle" id="btn-order" title="Play Order" style="border:none;">
         <svg class="icon-svg" id="icon-order-list" viewBox="0 0 24 24">
@@ -1127,13 +1083,12 @@
   </div>
 
   <script>
-    // === 0. 文字特效初始化 (Requirement 4) ===
+    // === 0. 文字特效 ===
     function initTextGlow() {
       const splitText = (id) => {
         const el = document.getElementById(id);
         const text = el.innerText;
         el.innerHTML = text.split('').map(char => {
-          // 标点不闪烁
           if (['，', '。', ' '].includes(char)) return char;
           const delay = Math.random() * 3;
           return `<span class="glow-char" style="animation-delay:-${delay}s">${char}</span>`;
@@ -1243,7 +1198,7 @@
     allSongs.forEach((li, index) => li.addEventListener('click', (e) => { e.stopPropagation(); playIndex(index); }));
     btnPlayPause.addEventListener('click', (e) => { e.stopPropagation(); togglePlay(); });
 
-    // === 2. 掉落物 (雪花/星星) ===
+    // === 2. 掉落物 ===
     const templates = [
       document.getElementById('tpl-0'), document.getElementById('tpl-1'),
       document.getElementById('tpl-2'), document.getElementById('tpl-3')
@@ -1254,7 +1209,6 @@
 
     function createFaller() {
       if (activeParticles >= MAX_PARTICLES || document.hidden) return;
-
       const tpl = templates[Math.floor(Math.random() * templates.length)];
       if (!tpl) return;
       const img = tpl.cloneNode(true);
@@ -1278,33 +1232,28 @@
     }
     setInterval(createFaller, 800);
 
-    // === 3. 点击爆散效果 (Requirement 6 - 优化版) ===
-    // 使用简单的对象池概念限制点击生成的DOM数量，防止手机卡死
+    // === 3. 点击爆散效果 ===
     let burstCount = 0;
-    const MAX_BURST_NODES = 20; // 限制同时存在的爆散粒子
+    const MAX_BURST_NODES = 20;
 
     window.addEventListener('pointerdown', (e) => {
       if (e.target.closest('.player-capsule') || e.target.closest('.music-panel') || e.target.closest('button') || e.target.closest('input')) return;
 
-      // 点击背景播放
       if (!audio.src && audio.paused) playIndex(0);
 
-      // 粒子爆散
-      const count = 6; // 每次点击产生6个
+      const count = 6;
       for (let i = 0; i < count; i++) {
         if (burstCount >= MAX_BURST_NODES) return;
 
         const p = templates[Math.floor(Math.random() * templates.length)].cloneNode(true);
         p.removeAttribute('id'); p.className = 'sprite';
         p.style.left = e.clientX + 'px'; p.style.top = e.clientY + 'px';
-        p.style.width = rand(10, 20) + 'px'; // 稍微变小一点
-        p.style.transition = 'none'; // 移除全局过渡
+        p.style.transition = 'none';
         document.body.appendChild(p);
         burstCount++;
 
-        // 物理模拟
         const angle = rand(0, Math.PI * 2);
-        const v = rand(3, 8); // 速度
+        const v = rand(3, 8);
         let vx = Math.cos(angle) * v, vy = Math.sin(angle) * v;
         let life = 1.0, rot = rand(0, 360);
 
@@ -1313,18 +1262,14 @@
           let cx = parseFloat(p.style.left), cy = parseFloat(p.style.top);
           p.style.left = (cx + vx) + 'px';
           p.style.top = (cy + vy) + 'px';
-          vx *= 0.92; vy *= 0.92; vy += 0.2; // 阻力+重力
+          vx *= 0.92; vy *= 0.92; vy += 0.2;
           rot += 5; life -= 0.03;
 
           p.style.transform = `translate(-50%,-50%) rotate(${rot}deg)`;
           p.style.opacity = life;
 
-          if (life > 0) {
-            requestAnimationFrame(tick);
-          } else {
-            p.remove();
-            burstCount--;
-          }
+          if (life > 0) { requestAnimationFrame(tick); }
+          else { p.remove(); burstCount--; }
         }
         requestAnimationFrame(tick);
       }
