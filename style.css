@@ -1001,6 +1001,75 @@ input[type=range]:hover::-webkit-slider-thumb {
     /* "Same screen max 3". */
     /* Let's keep it visible for now, user didn't say hide on mobile. */
   }
+
+  /* === Lyrics Mobile === */
+  .lyrics-wrapper {
+    height: 100px;
+    margin-top: 10px;
+  }
+
+  .lrc-line {
+    font-size: 14px;
+    padding: 2px 0;
+  }
+
+  .lrc-line.active {
+    font-size: 16px;
+  }
+}
+
+/* === Lyrics Base Styles (Placed here to ensure access) === */
+.lyrics-wrapper {
+  margin-top: 20px;
+  height: 120px;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+  mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+  /* Ensure it doesn't overlap/push too much but fits nicely */
+}
+
+
+.lyrics-scroll {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.lrc-line {
+  text-align: center;
+  padding: 6px 0;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 16px;
+  /* Pixel friendly size */
+  transition: all 0.4s ease;
+  min-height: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  line-height: 1.4;
+  font-family: 'DotGothic16', sans-serif;
+  /* Keep consistent with nearby pixel fonts */
+}
+
+.lrc-line.active {
+  color: var(--accent-pink);
+  text-shadow: 0 0 10px rgba(255, 183, 197, 0.6);
+  font-size: 18px;
+  transform: scale(1.05);
+  font-weight: bold;
+}
+
+.lrc-trans {
+  font-size: 0.8em;
+  opacity: 0.8;
+  margin-top: 2px;
+  font-weight: normal;
+  color: var(--accent-blue);
 }
 
 /* z-index设为5，使其位于背景(1)和面板(10+)之间 */

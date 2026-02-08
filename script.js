@@ -49,13 +49,23 @@ function playIndex(index) {
     if (audio.getAttribute('src') !== src) {
         audio.src = src;
         audio.load();
+        loadLyrics(src);
+    } else {
+        // Even if src is same, maybe reload lyrics just in case? Or if it was cleared.
+        // But usually loop or replay doesn't need reload.
+        // However, initial load might need it if src was set in HTML.
+        // Let's just call it if we are switching songs or if it's the first play.
+        if (lyricsData.length === 0) loadLyrics(src);
     }
 
     audio.play().then(() => updatePlayState(true)).catch(() => updatePlayState(false));
 }
 
 function togglePlay() {
-    if (currentSongIndex === -1) { playIndex(0); return; }
+    if (currentSongIndex === -1) {
+        playIndex(Math.floor(Math.random() * allSongs.length));
+        return;
+    }
     if (audio.paused) { audio.play(); updatePlayState(true); }
     else { audio.pause(); updatePlayState(false); }
 }
@@ -87,13 +97,176 @@ if (audio) {
         }
     });
 
+
+    audio.addEventListener('loadedmetadata', () => timeTxt.textContent = `${formatTime(audio.currentTime)} / ${formatTime(audio.duration)}`);
+
+    // Lyrics Sync
     audio.addEventListener('timeupdate', () => {
         if (!isDraggingProgress && audio.duration) {
             progBar.value = (audio.currentTime / audio.duration) * 100;
             timeTxt.textContent = `${formatTime(audio.currentTime)} / ${formatTime(audio.duration)}`;
         }
+        syncLyrics(audio.currentTime);
     });
-    audio.addEventListener('loadedmetadata', () => timeTxt.textContent = `${formatTime(audio.currentTime)} / ${formatTime(audio.duration)}`);
+}
+if (btnOrder) {
+    btnOrder.addEventListener('click', (e) => {
+        e.stopPropagation();
+        playMode = (playMode + 1) % 3;
+        iconsOrder.forEach((icon, i) => icon.style.display = (i === playMode) ? 'block' : 'none');
+    });
+}
+
+// === Lyrics Logic ===
+let lyricsData = []; // Array of { time: seconds, text: string, trans: string }
+const lyricsScroll = document.getElementById('lyrics-scroll');
+
+async function loadLyrics(mp3Src) {
+    lyricsData = [];
+    if (lyricsScroll) lyricsScroll.innerHTML = '<div class="lrc-line">Loading...</div>';
+
+    // Extract filename from path "music/filename.mp3"
+    const filename = mp3Src.split('/').pop(); // "filename.mp3"
+
+    let songData = null;
+    if (window.SONG_LYRICS) {
+        // Try direct match first if src is relative "music/..."
+        if (window.SONG_LYRICS[mp3Src]) {
+            songData = window.SONG_LYRICS[mp3Src];
+        } else if (window.SONG_LYRICS[filename]) {
+            songData = window.SONG_LYRICS[filename];
+        } else {
+            // Try decoding URI 
+            const decoded = decodeURIComponent(filename);
+            if (window.SONG_LYRICS[decoded]) songData = window.SONG_LYRICS[decoded];
+        }
+    }
+
+    if (!songData) {
+        console.warn('Lyrics not found for:', mp3Src);
+        if (lyricsScroll) lyricsScroll.innerHTML = '<div class="lrc-line">Pure Music</div>';
+        return;
+    }
+
+    const { lrc, trans } = songData;
+    parseAndMergeLyrics(lrc || '', trans || '');
+    renderLyrics();
+}
+
+function parseTime(timeStr) {
+    // [mm:ss.xx]
+    const parts = timeStr.split(':');
+    if (parts.length < 2) return 0;
+    const min = parseInt(parts[0], 10);
+    const sec = parseFloat(parts[1]);
+    return min * 60 + sec;
+}
+
+function parseToMap(text) {
+    const map = new Map(); // time -> text
+    const lines = text.split('\n');
+    const timeReg = /\[(\d{2}):(\d{2}\.\d{2,3})\]/g;
+
+    for (const line of lines) {
+        let match;
+        // Reset lastIndex because we might define it globally or just use matchAll
+        // Simple approach: split by ]
+        const parts = line.split(']');
+        const content = parts[parts.length - 1].trim();
+
+        for (let i = 0; i < parts.length - 1; i++) {
+            const tStr = parts[i].substring(1); // remove [
+            if (/^\d{2}:\d{2}\.\d{2,3}$/.test(tStr)) {
+                const t = parseTime(tStr);
+                // If multiple tags for same line, add to map
+                map.set(Math.floor(t * 100) / 100, content); // Round to 2 decimals for easier key matching? 
+                // Actually, just use fuzzy or direct. Let's store objects.
+            }
+        }
+    }
+
+    // Better parser
+    const result = [];
+    for (const line of lines) {
+        const matches = [...line.matchAll(/\[(\d{2}):(\d{2}\.\d{2,3})\]/g)];
+        if (matches.length > 0) {
+            const content = line.replace(/\[(\d{2}):(\d{2}\.\d{2,3})\]/g, '').trim();
+            if (!content) continue; // Skip empty lines if preferred, or keep for spacing
+            matches.forEach(m => {
+                const t = parseInt(m[1]) * 60 + parseFloat(m[2]);
+                result.push({ t, c: content });
+            });
+        }
+    }
+    return result;
+}
+
+function parseAndMergeLyrics(lrc, trans) {
+    const original = parseToMap(lrc); // Array used here actually
+    const translation = parseToMap(trans);
+
+    // Sort
+    original.sort((a, b) => a.t - b.t);
+    translation.sort((a, b) => a.t - b.t);
+
+    // Merge: For each original line, find matching translation (within small delta)
+    lyricsData = original.map(item => {
+        // Find closest trans within 0.5s ? Or just assume sync?
+        // Usually filenames match exactly so timestamps match exactly or very close.
+        const match = translation.find(tr => Math.abs(tr.t - item.t) < 0.2);
+        return {
+            time: item.t,
+            text: item.c,
+            trans: match ? match.c : null
+        };
+    });
+}
+
+function renderLyrics() {
+    if (!lyricsScroll) return;
+    lyricsScroll.innerHTML = '';
+    lyricsData.forEach((line, index) => {
+        const div = document.createElement('div');
+        div.className = 'lrc-line';
+        div.dataset.index = index;
+        div.innerHTML = `<span>${line.text}</span>${line.trans ? `<span class="lrc-trans">${line.trans}</span>` : ''}`;
+        lyricsScroll.appendChild(div);
+    });
+}
+
+function syncLyrics(currentTime) {
+    if (!lyricsData.length || !lyricsScroll) return;
+
+    // Find active line
+    let activeIndex = -1;
+    for (let i = 0; i < lyricsData.length; i++) {
+        if (currentTime >= lyricsData[i].time) {
+            activeIndex = i;
+        } else {
+            break;
+        }
+    }
+
+    // Update UI
+    const lines = lyricsScroll.children;
+    for (let i = 0; i < lines.length; i++) {
+        lines[i].classList.toggle('active', i === activeIndex);
+    }
+
+    // Scroll
+    if (activeIndex !== -1) {
+        // Center the active line
+        // We know container height is fixed (120px). Center is 60px.
+        // We need the valid offset of the active line.
+        const activeLine = lines[activeIndex];
+        const offset = activeLine.offsetTop + activeLine.offsetHeight / 2;
+        const containerHeight = lyricsScroll.parentElement.clientHeight;
+        const scrollCen = containerHeight / 2;
+
+        lyricsScroll.style.transform = `translateY(${scrollCen - offset}px)`;
+    } else {
+        lyricsScroll.style.transform = `translateY(0px)`;
+    }
 }
 
 const formatTime = (s) => {
@@ -108,6 +281,8 @@ if (progBar) {
         isDraggingProgress = true;
         const time = (e.target.value / 100) * audio.duration;
         timeTxt.textContent = `${formatTime(time)} / ${formatTime(audio.duration)}`;
+        // Sync lyrics while dragging? Optional.
+        syncLyrics(time);
     });
     progBar.addEventListener('change', (e) => {
         isDraggingProgress = false;
@@ -116,6 +291,33 @@ if (progBar) {
 }
 
 if (volSlider && audio) volSlider.addEventListener('input', (e) => audio.volume = e.target.value);
+
+// Update playIndex to load lyrics
+const oldPlayIndex = playIndex; // Store ref if needed, or just rewrite
+// We'll rewrite playIndex to be safe or just modify the existing block.
+// Actually, I can just modify `playIndex` inside the loop logic or re-declare it if not const.
+// It is `function playIndex`, so I can overwrite it or just modify the `playIndex` implementation
+// Wait, replacing a function implementation in this tool might be tricky if I don't target the whole block.
+// I'll target the existing specific lines in `playIndex` to insert `loadLyrics`.
+
+// Let's just hook into the existing playIndex by redefining it or inserting the call.
+// The code I am replacing above includes the end of `playIndex` so I have to be careful.
+// Wait, the ReplacementContent above STARTS with `});` which is `audio.addEventListener('ended', ...)` closure?
+// No, I need to check where I am replacing.
+// The `StartLine` target was `audio.addEventListener('timeupdate', ...)` block in original code.
+// I will target the `timeupdate` listener to replace it with one that includes `syncLyrics`,
+// AND I need to inject `loadLyrics(src)` into `playIndex`.
+
+// Let's do the `timeupdate` replacement + global function defs first (as above).
+// THEN I will do a separate edit to `playIndex` to call `loadLyrics`.
+
+/* Current Plan:
+1. Replace `timeupdate` block with new one + add all lyrics functions at the end of the file (or before Chibi).
+2. Modify `playIndex` to call `loadLyrics`.
+*/
+
+// Changing the ReplacementContent to only target the timeupdate block and add functions.
+
 
 allSongs.forEach((li, index) => li.addEventListener('click', (e) => { e.stopPropagation(); playIndex(index); }));
 if (btnPlayPause) btnPlayPause.addEventListener('click', (e) => { e.stopPropagation(); togglePlay(); });
@@ -161,7 +363,7 @@ const MAX_BURST_NODES = 20;
 window.addEventListener('pointerdown', (e) => {
     if (e.target.closest('.player-capsule') || e.target.closest('.music-panel') || e.target.closest('button') || e.target.closest('input')) return;
 
-    if (audio && !audio.src && audio.paused) playIndex(0);
+    if (audio && !audio.src && audio.paused) playIndex(Math.floor(Math.random() * allSongs.length));
 
     const count = 6;
     for (let i = 0; i < count; i++) {
