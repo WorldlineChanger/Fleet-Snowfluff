@@ -504,7 +504,7 @@ body {
 
 .quote-en {
   font-family: 'DotGothic16', sans-serif;
-  font-size: clamp(12px, 1.5vw, 14px);
+  font-size: clamp(14px, 2vw, 18px);
   color: var(--accent-blue);
   opacity: 0.8;
   text-align: center;

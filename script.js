@@ -256,8 +256,6 @@ function syncLyrics(currentTime) {
     // Scroll
     if (activeIndex !== -1) {
         // Center the active line
-        // We know container height is fixed (120px). Center is 60px.
-        // We need the valid offset of the active line.
         const activeLine = lines[activeIndex];
         const offset = activeLine.offsetTop + activeLine.offsetHeight / 2;
         const containerHeight = lyricsScroll.parentElement.clientHeight;
