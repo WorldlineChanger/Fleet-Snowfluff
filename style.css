@@ -1,0 +1,1013 @@
+:root {
+  --bg-deep: #0f1123;
+  --bg-light: #242446;
+  --accent-pink: #ffb7c5;
+  --accent-blue: #a0c4ff;
+  --text-glow: #e0e6ff;
+  --glass: rgba(18, 20, 40, 0.75);
+  --glass-mobile: rgba(18, 20, 40, 0.90);
+  --border: rgba(160, 196, 255, 0.3);
+  --z-noise: 1;
+  --z-sprite: 5;
+  --z-card: 10;
+  --z-panel: 20;
+  --z-nav: 50;
+  --z-ui: 100;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-deep);
+  background-image:
+    radial-gradient(circle at 50% 0%, #3a3a6a 0%, transparent 60%),
+    linear-gradient(180deg, var(--bg-deep) 0%, #1a1a2e 100%);
+  font-family: 'DotGothic16', sans-serif;
+  color: var(--text-glow);
+  overflow: hidden;
+  user-select: none;
+  cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="%23a0c4ff" d="M11 0h2v9h-2zM11 15h2v9h-2zM0 11h9v2H0zM15 11h9v2h-9zM11 11h2v2h-2z"/><path fill="rgba(0,0,0,0.5)" d="M12 9h1v2h-1zM13 12h2v1h-2zM12 13h-1v2h1zM9 12h2v-1h-2z"/></svg>') 12 12, crosshair;
+}
+
+.noise {
+  position: fixed;
+  inset: 0;
+  background: url('data:image/svg+xml;utf8,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noiseFilter"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noiseFilter)" opacity="0.04"/%3E%3C/svg%3E');
+  pointer-events: none;
+  z-index: var(--z-noise);
+}
+
+/* === Header === */
+.site-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 80px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 15px 40px;
+  background: linear-gradient(180deg, rgba(15, 17, 35, 0.8) 0%, rgba(15, 17, 35, 0) 100%);
+  z-index: var(--z-nav);
+  pointer-events: none;
+}
+
+.brand-area {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  /* Changed from column to center for row layout with logo */
+}
+
+/* New Logo Style */
+.logo-glass {
+  height: 75px;
+  width: auto;
+  margin-right: 15px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 5px var(--accent-pink));
+}
+
+.brand-text-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-title {
+  font-family: 'DotGothic16', sans-serif;
+  font-size: 26px;
+  font-weight: bold;
+  color: var(--accent-blue);
+  letter-spacing: 1px;
+  text-shadow:
+    2px 0 0 var(--accent-pink), -2px 0 0 var(--accent-pink),
+    0 2px 0 var(--accent-pink), 0 -2px 0 var(--accent-pink);
+}
+
+.brand-sub {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  letter-spacing: 0.5px;
+  margin-top: 6px;
+  text-shadow: 1px 1px 0 #000;
+}
+
+/* === 通用面板 === */
+.music-panel {
+  background: var(--glass);
+  backdrop-filter: blur(8px);
+  /* 这里的模糊会作用于后方的粒子 */
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 20px;
+  transition: all 0.3s;
+  pointer-events: auto;
+}
+
+.deco-pixel {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: currentColor;
+  box-shadow: 0 0 5px currentColor;
+  vertical-align: middle;
+  position: relative;
+  top: -2px;
+}
+
+/* === 歌曲列表样式 === */
+.song-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.song-list li {
+  cursor: pointer;
+  position: relative;
+  padding: 5px 10px;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid transparent;
+}
+
+.song-title {
+  font-size: 15px;
+  color: var(--text-glow);
+  opacity: 0.7;
+  transition: 0.2s;
+  position: relative;
+  z-index: 2;
+}
+
+.song-en {
+  font-size: 11px;
+  color: var(--accent-blue);
+  opacity: 0.5;
+  margin-top: 2px;
+  text-transform: uppercase;
+  font-family: 'DotGothic16', sans-serif;
+  letter-spacing: 0.5px;
+}
+
+.song-list li:hover .song-title {
+  opacity: 1;
+  text-shadow: 0 0 8px currentColor;
+}
+
+.song-list li.active {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.song-list li.active .song-title {
+  opacity: 1;
+  color: #fff;
+  font-weight: bold;
+  text-shadow: 0 0 10px currentColor;
+}
+
+.song-list li.active .song-en {
+  opacity: 0.9;
+  color: #fff;
+}
+
+/* 闪烁箭头动画 */
+@keyframes blink {
+
+  0%,
+  100% {
+    opacity: 1
+  }
+
+  50% {
+    opacity: 0.3
+  }
+}
+
+/* 箭头定位 */
+.song-list li.active::before {
+  position: absolute;
+  top: 8px;
+  font-size: 10px;
+  color: currentColor;
+  animation: blink 1s infinite;
+}
+
+/* 左侧和顶部：箭头在左 */
+.panel-left .song-list li.active::before,
+.panel-top .song-list li.active::before {
+  content: '►';
+  left: -8px;
+}
+
+.panel-left .song-list li.active,
+.panel-top .song-list li.active {
+  background: linear-gradient(90deg, rgba(255, 183, 197, 0.15), transparent);
+}
+
+/* 右侧：箭头在右 */
+.panel-right .song-list li.active::after {
+  content: '◄';
+  position: absolute;
+  right: -8px;
+  top: 8px;
+  font-size: 10px;
+  color: var(--accent-blue);
+  animation: blink 1s infinite;
+}
+
+.panel-right .song-list li.active {
+  background: linear-gradient(-90deg, rgba(160, 196, 255, 0.15), transparent);
+}
+
+/* 清除右侧列表可能的左伪元素 */
+.panel-right .song-list li.active::before {
+  content: none;
+}
+
+/* === 布局定位 (PC) === */
+.panel-top {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 40px 15px 40px;
+  border-radius: 0 0 16px 16px;
+  /* 顶部彩色条 */
+  border-top: 4px solid transparent;
+  background-image: linear-gradient(var(--glass), var(--glass)),
+    linear-gradient(90deg, var(--accent-pink), var(--accent-blue));
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  z-index: var(--z-nav);
+  pointer-events: auto;
+}
+
+/* 顶部专辑标题与列表横向结合 */
+.top-layout {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+}
+
+.panel-top .album-header {
+  text-align: right;
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
+  padding-right: 20px;
+  margin: 0;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.panel-top .album-header .deco-pixel {
+  margin-right: 10px;
+}
+
+.panel-top .album-header span {
+  background: linear-gradient(90deg, var(--accent-pink), var(--accent-blue));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.panel-top .album-header small {
+  display: block;
+  font-size: 12px;
+  opacity: 0.7;
+  margin-top: 4px;
+  color: var(--text-glow);
+}
+
+.panel-top .song-list {
+  flex-direction: row;
+  gap: 20px;
+}
+
+.panel-top .song-list li {
+  align-items: center;
+  text-align: center;
+  border: none;
+  padding: 4px 8px;
+  background: none !important;
+}
+
+.panel-top .song-list li.active::before {
+  content: '▼';
+  left: 50%;
+  top: -12px;
+  transform: translateX(-50%);
+  color: var(--text-glow);
+}
+
+/* 左侧专辑 */
+.panel-left {
+  position: absolute;
+  top: 50%;
+  left: 40px;
+  transform: translateY(-50%);
+  width: 280px;
+  border-left: 3px solid var(--accent-pink);
+  border-radius: 0 12px 12px 0;
+  z-index: var(--z-panel);
+}
+
+/* 方块在左 */
+.panel-left .album-header .deco-pixel {
+  margin-right: 8px;
+}
+
+.panel-left .album-header {
+  color: var(--accent-pink);
+  text-shadow: 0 0 10px rgba(255, 183, 197, 0.3);
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+.panel-left .album-header small {
+  display: block;
+  font-size: 12px;
+  opacity: 0.6;
+  margin-top: 4px;
+  color: var(--text-glow);
+  font-weight: normal;
+}
+
+/* 右侧专辑 */
+.panel-right {
+  position: absolute;
+  top: 50%;
+  right: 40px;
+  transform: translateY(-50%);
+  width: 280px;
+  text-align: right;
+  border-right: 3px solid var(--accent-blue);
+  border-radius: 12px 0 0 12px;
+  z-index: var(--z-panel);
+}
+
+/* 方块在右 */
+.panel-right .album-header .deco-pixel {
+  margin-left: 8px;
+}
+
+.panel-right .album-header {
+  color: var(--accent-blue);
+  text-shadow: 0 0 10px rgba(160, 196, 255, 0.3);
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+.panel-right .album-header small {
+  display: block;
+  font-size: 12px;
+  opacity: 0.6;
+  margin-top: 4px;
+  color: var(--text-glow);
+  font-weight: normal;
+}
+
+.panel-right .song-list li {
+  align-items: flex-end;
+}
+
+/* === 中间文字 === */
+.center-container {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-card);
+  pointer-events: none;
+}
+
+.center-card {
+  position: relative;
+  width: 680px;
+  max-width: 90%;
+  padding: 50px 40px;
+  background: var(--glass);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
+  animation: float 6s ease-in-out infinite;
+  pointer-events: auto;
+}
+
+.corner {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  background: var(--accent-pink);
+  box-shadow: 0 0 5px var(--accent-pink);
+}
+
+.tl {
+  top: -1px;
+  left: -1px;
+}
+
+.tr {
+  top: -1px;
+  right: -1px;
+}
+
+.bl {
+  bottom: -1px;
+  left: -1px;
+}
+
+.br {
+  bottom: -1px;
+  right: -1px;
+}
+
+.cn-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-bottom: 25px;
+}
+
+.quote-line {
+  font-size: clamp(20px, 3vw, 32px);
+  letter-spacing: 2px;
+  white-space: nowrap;
+  position: relative;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* 单字辉光动画 */
+.glow-char {
+  display: inline-block;
+  transition: color 0.2s;
+  animation: pixel-flicker 4s infinite;
+}
+
+@keyframes pixel-flicker {
+
+  0%,
+  90% {
+    color: rgba(255, 255, 255, 0.5);
+    text-shadow: none;
+  }
+
+  92% {
+    color: #fff;
+    text-shadow: 0 0 10px var(--accent-pink);
+  }
+
+  94% {
+    color: rgba(255, 255, 255, 0.8);
+    text-shadow: 0 0 4px var(--accent-pink);
+  }
+
+  96% {
+    color: #fff;
+    text-shadow: 0 0 15px var(--accent-pink), 0 0 25px var(--accent-pink);
+  }
+
+  100% {
+    color: rgba(255, 255, 255, 0.5);
+    text-shadow: none;
+  }
+}
+
+.line-1 {
+  align-self: flex-start;
+  margin-left: 20px;
+}
+
+.line-2 {
+  align-self: flex-end;
+  margin-right: 20px;
+}
+
+.quote-en {
+  font-family: 'DotGothic16', sans-serif;
+  font-size: clamp(12px, 1.5vw, 14px);
+  color: var(--accent-blue);
+  opacity: 0.8;
+  text-align: center;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+/* === 播放器 (PC) === */
+.player-capsule {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  height: 56px;
+  width: 480px;
+  background: rgba(15, 17, 35, 0.95);
+  border: 1px solid var(--border);
+  border-radius: 50px;
+  backdrop-filter: blur(12px);
+  z-index: var(--z-ui);
+  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  transition: width 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), border-color 0.3s;
+  overflow: hidden;
+}
+
+.player-capsule:hover {
+  width: 720px;
+  border-color: var(--accent-blue);
+  box-shadow: 0 8px 30px rgba(160, 196, 255, 0.2);
+}
+
+.p-main {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-grow: 1;
+  min-width: 0;
+}
+
+.btn-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #fff;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.btn-circle:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--accent-pink);
+  box-shadow: 0 0 8px var(--accent-pink);
+  transform: scale(1.05);
+}
+
+.icon-svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+
+.progress-wrapper {
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.progress-track {
+  position: relative;
+  width: 100%;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+/* === Visualizer === */
+.visualizer-container {
+  position: absolute;
+  bottom: 50%;
+  /* Align with top of capsule roughly or just above */
+  left: 20px;
+  right: 20px;
+  height: 30px;
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  /* Pixel gap */
+  z-index: -1;
+  /* Behind content? No, above capsule maybe. */
+  /* Wait, "above capsule" means physically on top of it or Y-axis above? 
+       "Capsule above increase pixel wave effect" -> Likely sitting on top edge of capsule.
+    */
+  transform: translateY(-38px);
+  /* Move up */
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.player-capsule:hover .visualizer-container,
+.visualizer-container.active {
+  opacity: 1;
+}
+
+.v-bar {
+  flex: 1;
+  background: var(--accent-pink);
+  min-height: 4px;
+  max-height: 100%;
+  /* Pixel look */
+  image-rendering: pixelated;
+  transition: height 0.1s ease;
+}
+
+.v-bar:nth-child(even) {
+  background: var(--accent-blue);
+}
+
+/* Gradient Pixel */
+.gradient-pixel {
+  background: linear-gradient(135deg, var(--accent-blue), var(--accent-pink)) !important;
+}
+
+input[type=range] {
+  -webkit-appearance: none;
+  width: 100%;
+  background: transparent;
+  display: block;
+  margin: 0;
+}
+
+input[type=range]::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.15);
+  /* Gradient overlay for progress */
+  background-image: linear-gradient(90deg, var(--accent-blue), var(--accent-pink));
+  background-size: var(--seek-before-width, 0%) 100%;
+  background-repeat: no-repeat;
+  border-radius: 3px;
+}
+
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  height: 14px;
+  width: 8px;
+  background: var(--accent-pink);
+  margin-top: -4px;
+  border-radius: 2px;
+  box-shadow: 0 0 5px var(--accent-pink);
+  transition: transform 0.1s;
+}
+
+input[type=range]:hover::-webkit-slider-thumb {
+  transform: scale(1.2);
+  background: #fff;
+}
+
+.time-display {
+  font-size: 12px;
+  font-family: monospace;
+  color: var(--accent-blue);
+  white-space: nowrap;
+  min-width: 90px;
+  text-align: right;
+}
+
+.extra-controls {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 0;
+  opacity: 0;
+  transition: all 0.4s ease;
+  transform: translateX(20px);
+  margin-left: 0;
+  padding-left: 0;
+  white-space: nowrap;
+}
+
+.player-capsule:hover .extra-controls {
+  width: auto;
+  opacity: 1;
+  transform: translateX(0);
+  margin-left: 14px;
+  padding-left: 14px;
+  border-left: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.vol-track {
+  width: 70px !important;
+}
+
+/* === Chibi Floating Animation Classes === */
+.chibi-wrapper {
+  position: fixed;
+  z-index: 95;
+  pointer-events: none;
+  width: 170px;
+  height: 170px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 5s ease-in-out;
+}
+
+.chibi-display {
+  width: 170px;
+  height: auto;
+  object-fit: contain;
+  /* ensure glass is same size */
+  max-width: 170px;
+  max-height: 170px;
+}
+
+
+/* === 移动端/竖屏 === */
+@media (max-width: 1100px) {
+
+  html,
+  body {
+    overflow-y: auto;
+    height: auto;
+    min-height: 100%;
+    position: relative;
+  }
+
+  .site-header {
+    position: relative;
+    background: rgba(15, 17, 35, 0.95);
+    height: auto;
+    padding: 20px;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    z-index: 60;
+    /* Ensure header is above panel-top if overlapping */
+  }
+
+  .brand-area {
+    flex-direction: column;
+  }
+
+  .logo-glass {
+    margin-right: 0;
+    margin-bottom: 10px;
+  }
+
+  .brand-text-col {
+    align-items: center;
+  }
+
+  .brand-title {
+    font-size: 30px;
+    text-shadow: 2px 2px 0 var(--accent-pink);
+  }
+
+  .main-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    padding-bottom: 140px;
+    padding-top: 10px;
+    position: relative;
+    z-index: 10;
+  }
+
+  .center-container {
+    position: relative;
+    inset: auto;
+    z-index: 10;
+    order: 1;
+    width: 100%;
+  }
+
+  .center-card {
+    padding: 30px 15px;
+    width: 94%;
+    margin: 0 auto;
+    animation: none;
+  }
+
+  .quote-line {
+    font-size: 22px;
+    white-space: normal;
+    text-align: center;
+  }
+
+  .line-1,
+  .line-2 {
+    align-self: center;
+    margin: 0;
+  }
+
+  .quote-en {
+    white-space: normal;
+    margin-top: 10px;
+    line-height: 1.4;
+  }
+
+  /* .mobile-panel-base properties */
+  .panel-top,
+  .panel-left,
+  .panel-right {
+    position: relative !important;
+    /* Force static flow */
+    transform: none !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    width: 94%;
+    max-width: 500px;
+    margin: 0;
+    text-align: left;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--glass-mobile);
+    padding: 15px;
+    display: block;
+  }
+
+  /* .panel-top specific overrides */
+  .panel-top {
+    order: 2;
+    border-top: 3px solid transparent;
+    background-image: linear-gradient(var(--glass-mobile), var(--glass-mobile)), linear-gradient(90deg, var(--accent-pink), var(--accent-blue));
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+  }
+
+  .top-layout {
+    display: block;
+  }
+
+  .panel-top .album-header {
+    text-align: left;
+    border-right: none;
+    padding-right: 0;
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .panel-top .album-header .deco-pixel {
+    margin-right: 8px;
+    order: -1;
+  }
+
+  .panel-top .song-list {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .panel-top .song-list li {
+    align-items: flex-start;
+    text-align: left;
+    background: transparent !important;
+    border-left: 2px solid transparent;
+    padding: 5px 10px;
+  }
+
+  .panel-top .song-list li.active {
+    border-left-color: var(--text-glow);
+  }
+
+  .panel-top .song-list li.active::before {
+    content: none;
+  }
+
+  .panel-left {
+    order: 3;
+    border-left: 3px solid var(--accent-pink);
+  }
+
+  .panel-right {
+    order: 4;
+    border-right: 3px solid var(--accent-blue);
+    text-align: left;
+  }
+
+  .panel-right .album-header {
+    justify-content: flex-start;
+  }
+
+  .panel-right .album-header .deco-pixel {
+    margin-left: 0;
+    margin-right: 8px;
+    order: -1;
+  }
+
+  .panel-right .song-list li {
+    align-items: flex-start;
+  }
+
+  .panel-right .song-list li.active::after {
+    content: none;
+  }
+
+  .panel-right .song-list li.active::before {
+    content: '►';
+    left: -8px;
+    position: absolute;
+    font-size: 10px;
+    animation: blink 1s infinite;
+    color: var(--accent-blue);
+  }
+
+  .player-capsule {
+    width: 96%;
+    max-width: 500px;
+    height: auto;
+    bottom: 10px;
+    padding: 10px 15px;
+    border-radius: 12px;
+    flex-direction: column;
+    overflow: visible;
+  }
+
+  .player-capsule:hover {
+    width: 96%;
+  }
+
+  .progress-wrapper {
+    width: 100%;
+    margin-bottom: 8px;
+    order: 1;
+  }
+
+  input[type=range]::-webkit-slider-thumb {
+    transform: scale(1.2);
+  }
+
+  .p-main {
+    width: 100%;
+    justify-content: space-between;
+    order: 2;
+    flex-grow: 0;
+    gap: 0;
+  }
+
+  .time-display {
+    text-align: left;
+    min-width: auto;
+    margin-left: 10px;
+    flex-grow: 1;
+  }
+
+  .extra-controls {
+    display: flex;
+    width: auto;
+    opacity: 1;
+    transform: none;
+    order: 3;
+    position: static;
+    margin: 0;
+    padding: 0;
+    border: none;
+  }
+
+  .vol-svg,
+  .vol-track {
+    display: none;
+  }
+
+  .chibi-wrapper {
+    display: none;
+    /* Hide on mobile? User didn't specify. Assuming keep it but maybe fewer? Max 3 still fine. */
+    /* If user wants it on mobile, keep it. But 170px might be big. */
+    /* "Same screen max 3". */
+    /* Let's keep it visible for now, user didn't say hide on mobile. */
+  }
+}
+
+/* z-index设为5，使其位于背景(1)和面板(10+)之间 */
+.sprite {
+  position: fixed;
+  pointer-events: none;
+  z-index: var(--z-sprite);
+  image-rendering: pixelated;
+  will-change: transform, opacity;
+}
