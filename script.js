@@ -341,20 +341,56 @@ allSongs.forEach((li, index) => li.addEventListener('click', (e) => { e.stopProp
 if (btnPlayPause) btnPlayPause.addEventListener('click', (e) => { e.stopPropagation(); togglePlay(); });
 
 // === 2. 掉落物 ===
-const templates = [
-    document.getElementById('tpl-0'), document.getElementById('tpl-1'),
-    document.getElementById('tpl-2'), document.getElementById('tpl-3')
+// 预加载图片并为每个图片维护独立的对象池
+const particleSrcs = [
+    'assets/icon0.png',
+    'assets/icon1.png',
+    'assets/icon2.png',
+    'assets/icon3.png'
 ];
+
+// 预加载图片
+const preloadedImages = particleSrcs.map(src => {
+    const img = new Image();
+    img.src = src;
+    return img;
+});
+
+// 为每个 src 维护独立的对象池，避免重复设置 src
+const particlePools = {};
+particleSrcs.forEach(src => { particlePools[src] = []; });
+
 let activeParticles = 0;
 const MAX_PARTICLES = window.innerWidth < 800 ? 8 : 40;
 const rand = (min, max) => Math.random() * (max - min) + min;
 
+function getParticle(src) {
+    let img;
+    const pool = particlePools[src];
+    if (pool && pool.length > 0) {
+        img = pool.pop();
+        // 不重新设置 src，因为池中的元素已经是正确的 src
+    } else {
+        img = document.createElement('img');
+        img.className = 'sprite';
+        img.src = src;
+    }
+    return img;
+}
+
+function releaseParticle(img, src) {
+    if (img.parentNode) img.remove();
+    img.style.cssText = '';
+    img.className = 'sprite';
+    if (particlePools[src]) {
+        particlePools[src].push(img);
+    }
+}
+
 function createFaller() {
     if (activeParticles >= MAX_PARTICLES || document.hidden) return;
-    const tpl = templates[Math.floor(Math.random() * templates.length)];
-    if (!tpl) return;
-    const img = tpl.cloneNode(true);
-    img.removeAttribute('id'); img.className = 'sprite';
+    const src = particleSrcs[Math.floor(Math.random() * particleSrcs.length)];
+    const img = getParticle(src);
 
     const duration = rand(6, 14);
     img.style.left = `${rand(0, window.innerWidth)}px`;
@@ -369,11 +405,15 @@ function createFaller() {
         img.style.transform = `translateY(${window.innerHeight + 160}px) translateX(${rand(-60, 60)}px) rotate(${rand(0, 360)}deg)`;
     });
 
-    setTimeout(() => { if (img.parentNode) { img.remove(); activeParticles--; } }, duration * 1000);
+    setTimeout(() => {
+        releaseParticle(img, src);
+        activeParticles--;
+    }, duration * 1000);
 }
 setInterval(createFaller, window.innerWidth < 800 ? 1200 : 800);
 
 // === 3. 点击爆散效果 ===
+// 复用 particlePools 独立对象池
 let burstCount = 0;
 const MAX_BURST_NODES = 20;
 
@@ -386,10 +426,8 @@ window.addEventListener('pointerdown', (e) => {
     for (let i = 0; i < count; i++) {
         if (burstCount >= MAX_BURST_NODES) return;
 
-        const tpl = templates[Math.floor(Math.random() * templates.length)];
-        if (!tpl) continue;
-        const p = tpl.cloneNode(true);
-        p.removeAttribute('id'); p.className = 'sprite';
+        const src = particleSrcs[Math.floor(Math.random() * particleSrcs.length)];
+        const p = getParticle(src); // 复用 getParticle 函数
         p.style.left = e.clientX + 'px'; p.style.top = e.clientY + 'px';
         p.style.transition = 'none';
         document.body.appendChild(p);
@@ -412,7 +450,7 @@ window.addEventListener('pointerdown', (e) => {
             p.style.opacity = life;
 
             if (life > 0) { requestAnimationFrame(tick); }
-            else { p.remove(); burstCount--; }
+            else { releaseParticle(p, src); burstCount--; }
         }
         requestAnimationFrame(tick);
     }
