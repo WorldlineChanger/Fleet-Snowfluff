@@ -111,6 +111,8 @@ body {
   padding: 20px;
   transition: all 0.3s;
   pointer-events: auto;
+  will-change: transform;
+  contain: layout style;
 }
 
 .deco-pixel {
@@ -810,6 +812,10 @@ input[type=range]:hover::-webkit-slider-thumb {
     width: 94%;
     margin: 0 auto;
     animation: none;
+    /* 移动端禁用模糊以提升性能 */
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: var(--glass-mobile);
   }
 
   .quote-line {
@@ -849,6 +855,9 @@ input[type=range]:hover::-webkit-slider-thumb {
     background: var(--glass-mobile);
     padding: 15px;
     display: block;
+    /* 移动端禁用模糊以提升性能 */
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
 
   /* .panel-top specific overrides */
@@ -858,6 +867,9 @@ input[type=range]:hover::-webkit-slider-thumb {
     background-image: linear-gradient(var(--glass-mobile), var(--glass-mobile)), linear-gradient(90deg, var(--accent-pink), var(--accent-blue));
     background-origin: border-box;
     background-clip: padding-box, border-box;
+    /* 移动端禁用模糊以提升性能 */
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
 
   .top-layout {
@@ -947,6 +959,10 @@ input[type=range]:hover::-webkit-slider-thumb {
     border-radius: 12px;
     flex-direction: column;
     overflow: visible;
+    /* 移动端禁用模糊以提升性能 */
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: rgba(15, 17, 35, 1);
   }
 
   .player-capsule:hover {
@@ -1035,6 +1051,10 @@ input[type=range]:hover::-webkit-slider-thumb {
     transform: translateX(-50%) !important;
     margin: 0;
     z-index: 1001 !important;
+    /* 移动端禁用模糊以提升性能 */
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: rgba(18, 20, 40, 0.95);
   }
 
   .envelope-btn:hover {
@@ -1053,7 +1073,8 @@ input[type=range]:hover::-webkit-slider-thumb {
     background: rgba(10, 12, 28, 1) !important;
     border: none !important;
     border-radius: 0 !important;
-    padding: 0 !important;
+    /* 保持 padding 不变以避免关闭时宽度闪烁 */
+    padding: 20px !important;
     z-index: 1000 !important;
     opacity: 1 !important;
     visibility: hidden;
@@ -1061,7 +1082,10 @@ input[type=range]:hover::-webkit-slider-thumb {
       visibility 0s 0.4s !important;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    /* 关闭时隐藏滚动条防止闪烁 */
+    overflow: hidden !important;
+    will-change: transform;
+    contain: layout style;
   }
 
   .comment-panel.open {
@@ -1069,7 +1093,6 @@ input[type=range]:hover::-webkit-slider-thumb {
     visibility: visible;
     transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
       visibility 0s 0s !important;
-    padding: 20px !important;
   }
 
   .comment-panel .corner {
@@ -1098,6 +1121,13 @@ input[type=range]:hover::-webkit-slider-thumb {
     padding-right: 5px;
     padding-bottom: 80px;
     -webkit-overflow-scrolling: touch;
+    /* 延迟显示滚动条直到面板完全打开 */
+    overflow-x: hidden;
+  }
+
+  /* 仅当面板打开时才显示滚动条 */
+  .comment-panel:not(.open) .comment-body {
+    overflow-y: hidden !important;
   }
 
   /* 竖屏底部Home键 */

@@ -346,7 +346,7 @@ const templates = [
     document.getElementById('tpl-2'), document.getElementById('tpl-3')
 ];
 let activeParticles = 0;
-const MAX_PARTICLES = window.innerWidth < 800 ? 12 : 40;
+const MAX_PARTICLES = window.innerWidth < 800 ? 8 : 40;
 const rand = (min, max) => Math.random() * (max - min) + min;
 
 function createFaller() {
@@ -360,19 +360,18 @@ function createFaller() {
     img.style.left = `${rand(0, window.innerWidth)}px`;
     img.style.top = `-60px`;
     img.style.opacity = rand(0.3, 0.7);
-    img.style.transition = `transform ${duration}s linear, top ${duration}s linear`;
+    img.style.transition = `transform ${duration}s linear`;
 
     document.body.appendChild(img);
     activeParticles++;
 
     requestAnimationFrame(() => {
-        img.style.top = `${window.innerHeight + 100}px`;
-        img.style.transform = `translateX(${rand(-60, 60)}px) rotate(${rand(0, 360)}deg)`;
+        img.style.transform = `translateY(${window.innerHeight + 160}px) translateX(${rand(-60, 60)}px) rotate(${rand(0, 360)}deg)`;
     });
 
     setTimeout(() => { if (img.parentNode) { img.remove(); activeParticles--; } }, duration * 1000);
 }
-setInterval(createFaller, 800);
+setInterval(createFaller, window.innerWidth < 800 ? 1200 : 800);
 
 // === 3. 点击爆散效果 ===
 let burstCount = 0;
@@ -383,7 +382,7 @@ window.addEventListener('pointerdown', (e) => {
 
     if (audio && !audio.src && audio.paused) playIndex(Math.floor(Math.random() * allSongs.length));
 
-    const count = 6;
+    const count = window.innerWidth < 800 ? 3 : 6;
     for (let i = 0; i < count; i++) {
         if (burstCount >= MAX_BURST_NODES) return;
 
@@ -597,7 +596,7 @@ function updateVisualizer() {
         bars.forEach(bar => bar.style.height = '10%');
     }
 }
-setInterval(updateVisualizer, 100);
+setInterval(updateVisualizer, window.innerWidth < 800 ? 150 : 100);
 
 // Update progress bar color
 function updateProgressColor() {
