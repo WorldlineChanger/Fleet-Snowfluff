@@ -13,6 +13,7 @@
   --z-panel: 20;
   --z-nav: 50;
   --z-ui: 100;
+  --z-comment: 35;
 }
 
 * {
@@ -1016,6 +1017,131 @@ input[type=range]:hover::-webkit-slider-thumb {
   .lrc-line.active {
     font-size: 16px;
   }
+
+  /* === 留言板移动端适配 (全屏modal覆盖层) === */
+
+  /* 隐藏overlay，移动端留言板自带全屏遮罩 */
+  .comment-overlay {
+    display: none !important;
+  }
+
+  /* 按钮固定底部，z-index最高，永远在最上层 */
+  .envelope-btn,
+  .envelope-btn.active,
+  .envelope-btn.shifted {
+    position: fixed !important;
+    bottom: 130px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    margin: 0;
+    z-index: 1001 !important;
+  }
+
+  .envelope-btn:hover {
+    transform: translateX(-50%) scale(1.1) !important;
+  }
+
+  /* 留言板容器变为全屏modal覆盖层 */
+  .comment-panel {
+    position: fixed !important;
+    inset: 0 !important;
+    transform: translateY(100%) !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    height: 100% !important;
+    background: rgba(10, 12, 28, 1) !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    z-index: 1000 !important;
+    opacity: 1 !important;
+    visibility: hidden;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+      visibility 0s 0.4s !important;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .comment-panel.open {
+    transform: translateY(0) !important;
+    visibility: visible;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+      visibility 0s 0s !important;
+    padding: 20px !important;
+  }
+
+  .comment-panel .corner {
+    display: none !important;
+  }
+
+  .comment-close {
+    top: 15px !important;
+    right: 15px !important;
+    z-index: 10 !important;
+  }
+
+  .comment-header {
+    flex-shrink: 0;
+    text-align: center;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 15px;
+  }
+
+  .comment-body {
+    flex: 1;
+    overflow-y: auto;
+    max-height: none !important;
+    height: auto !important;
+    padding-right: 5px;
+    padding-bottom: 80px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* 竖屏底部Home键 */
+  .comment-home {
+    display: flex !important;
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 56px;
+    height: 56px;
+    background: var(--glass);
+    border: 2px solid var(--accent-pink);
+    border-radius: 50%;
+    color: var(--accent-pink);
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    z-index: 1002;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 20px rgba(255, 183, 197, 0.3);
+  }
+
+  .comment-home:hover {
+    background: var(--accent-pink);
+    color: var(--bg-deep);
+    box-shadow: 0 0 30px rgba(255, 183, 197, 0.5);
+  }
+
+
+
+  /* 移动端不需要shifted/compact状态 */
+  .center-container.shifted {
+    transform: none;
+  }
+
+  .center-card.compact {
+    width: 94%;
+    padding: 30px 15px;
+  }
+
+  .center-card.compact .quote-line {
+    font-size: 20px;
+  }
 }
 
 /* === Lyrics Base Styles (Placed here to ensure access) === */
@@ -1079,4 +1205,331 @@ input[type=range]:hover::-webkit-slider-thumb {
   z-index: var(--z-sprite);
   image-rendering: pixelated;
   will-change: transform, opacity;
+}
+
+/* === 信封按钮 === */
+.envelope-btn {
+  position: fixed;
+  bottom: 120px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 48px;
+  height: 48px;
+  background: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  z-index: var(--z-ui);
+  transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(8px);
+}
+
+.envelope-btn:hover {
+  border-color: var(--accent-pink);
+  box-shadow: 0 0 15px rgba(255, 183, 197, 0.4);
+}
+
+.envelope-btn.active {
+  background: linear-gradient(135deg, var(--accent-pink), var(--accent-blue));
+  border-color: transparent;
+}
+
+/* 横屏展开时信封跟随文字框左移 */
+.envelope-btn.shifted {
+  transform: translateX(calc(-50% - 280px));
+}
+
+.envelope-icon {
+  width: 24px;
+  height: 24px;
+  color: var(--text-glow);
+  transition: color 0.3s;
+}
+
+.envelope-btn.active .envelope-icon {
+  color: var(--bg-deep);
+}
+
+/* === 留言板遮罩层 === */
+.comment-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 998;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0s 0.3s;
+}
+
+.comment-overlay.open {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.3s ease, visibility 0s 0s;
+}
+
+/* === 留言板面板 (横屏：从文字框后向右展开) === */
+.comment-panel {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 0;
+  max-width: 520px;
+  max-height: 70vh;
+  background: var(--glass);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 0;
+  z-index: 999;
+  transition: width 0.5s cubic-bezier(0.25, 0.8, 0.25, 1),
+    padding 0.5s cubic-bezier(0.25, 0.8, 0.25, 1),
+    opacity 0.5s ease,
+    left 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+  overflow: hidden;
+  box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  visibility: hidden;
+}
+
+.comment-panel.open {
+  width: 520px;
+  padding: 20px;
+  opacity: 1;
+  visibility: visible;
+  left: calc(50% + 280px);
+}
+
+/* 关闭按钮 */
+.comment-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-glow);
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  z-index: 10;
+}
+
+.comment-close:hover {
+  background: rgba(255, 183, 197, 0.2);
+  border-color: var(--accent-pink);
+  color: var(--accent-pink);
+}
+
+/* Home键 - 桌面端默认隐藏 */
+.comment-home {
+  display: none;
+}
+
+.comment-header {
+  font-size: 18px;
+  font-weight: bold;
+  color: var(--accent-pink);
+  margin-bottom: 15px;
+  text-shadow: 0 0 10px rgba(255, 183, 197, 0.3);
+  white-space: nowrap;
+}
+
+.comment-header .deco-pixel {
+  margin-right: 8px;
+}
+
+.comment-header small {
+  display: block;
+  font-size: 12px;
+  opacity: 0.6;
+  margin-top: 4px;
+  color: var(--text-glow);
+  font-weight: normal;
+}
+
+/* === 中间卡片展开时的变换 === */
+.center-container {
+  transition: transform 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.center-container.shifted {
+  transform: translateX(-280px);
+}
+
+/* 文字框压缩但防溢出 */
+.center-card {
+  transition: width 0.5s cubic-bezier(0.25, 0.8, 0.25, 1),
+    padding 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.center-card.compact {
+  width: 480px;
+  padding: 40px 30px;
+}
+
+.center-card.compact .quote-line {
+  font-size: clamp(18px, 2.5vw, 26px);
+  white-space: normal;
+  text-align: center;
+}
+
+.center-card.compact .line-1,
+.center-card.compact .line-2 {
+  align-self: center;
+  margin: 0;
+}
+
+.center-card.compact .quote-en {
+  font-size: clamp(12px, 1.5vw, 14px);
+  white-space: normal;
+}
+
+/* === Twikoo 自定义样式 === */
+#tcomment {
+  font-family: 'DotGothic16', sans-serif;
+}
+
+/* 主容器 */
+#tcomment .tk-main {
+  background: transparent !important;
+}
+
+/* 输入区域 */
+#tcomment .tk-row {
+  margin-bottom: 10px;
+}
+
+#tcomment .el-textarea__inner,
+#tcomment .el-input__inner {
+  background: rgba(0, 0, 0, 0.3) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text-glow) !important;
+  font-family: 'DotGothic16', sans-serif !important;
+  border-radius: 4px !important;
+  transition: border-color 0.3s !important;
+}
+
+#tcomment .el-textarea__inner:focus,
+#tcomment .el-input__inner:focus {
+  border-color: var(--accent-pink) !important;
+  box-shadow: 0 0 8px rgba(255, 183, 197, 0.3) !important;
+}
+
+#tcomment .el-textarea__inner::placeholder,
+#tcomment .el-input__inner::placeholder {
+  color: rgba(224, 230, 255, 0.4) !important;
+}
+
+/* 提交按钮 */
+#tcomment .tk-submit {
+  background: linear-gradient(90deg, var(--accent-pink), var(--accent-blue)) !important;
+  border: none !important;
+  font-family: 'DotGothic16', sans-serif !important;
+  color: var(--bg-deep) !important;
+  font-weight: bold !important;
+  border-radius: 4px !important;
+  transition: transform 0.2s, box-shadow 0.2s !important;
+}
+
+#tcomment .tk-submit:hover {
+  transform: scale(1.05) !important;
+  box-shadow: 0 0 15px rgba(255, 183, 197, 0.5) !important;
+}
+
+/* 评论列表 */
+#tcomment .tk-comments {
+  margin-top: 15px;
+}
+
+#tcomment .tk-comment {
+  border-bottom: 1px solid var(--border) !important;
+  padding: 12px 0 !important;
+}
+
+#tcomment .tk-nick {
+  color: var(--accent-blue) !important;
+  font-weight: bold !important;
+}
+
+#tcomment .tk-content {
+  color: var(--text-glow) !important;
+  font-family: 'DotGothic16', sans-serif !important;
+  line-height: 1.6 !important;
+}
+
+#tcomment .tk-time {
+  color: rgba(224, 230, 255, 0.5) !important;
+  font-size: 11px !important;
+}
+
+/* 头像 */
+#tcomment .tk-avatar {
+  border-radius: 4px !important;
+  box-shadow: 0 0 8px rgba(160, 196, 255, 0.3) !important;
+}
+
+/* 回复按钮 */
+#tcomment .tk-action-icon {
+  color: var(--accent-blue) !important;
+  transition: color 0.2s !important;
+}
+
+#tcomment .tk-action-icon:hover {
+  color: var(--accent-pink) !important;
+}
+
+/* 分页 */
+#tcomment .tk-paginator {
+  color: var(--text-glow) !important;
+}
+
+#tcomment .tk-paginator button {
+  background: var(--glass) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text-glow) !important;
+  border-radius: 4px !important;
+}
+
+#tcomment .tk-paginator button:hover {
+  border-color: var(--accent-pink) !important;
+}
+
+/* 加载状态 */
+#tcomment .tk-loading {
+  color: var(--accent-pink) !important;
+}
+
+/* 内部滚动容器 */
+.comment-body {
+  max-height: calc(70vh - 80px);
+  overflow-y: auto;
+  padding-right: 10px;
+  margin-right: -10px;
+}
+
+/* 滚动条美化 - 应用于内部容器 */
+.comment-body::-webkit-scrollbar {
+  width: 4px;
+}
+
+.comment-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.comment-body::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--accent-pink), var(--accent-blue));
+  border-radius: 2px;
+}
+
+.comment-body::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-pink);
 }

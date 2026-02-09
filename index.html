@@ -87,6 +87,15 @@
       </div>
     </div>
 
+    <!-- 信封按钮 -->
+    <button class="envelope-btn" id="envelope-btn" title="留言板">
+      <svg viewBox="0 0 24 24" class="envelope-icon">
+        <rect x="2" y="5" width="20" height="14" fill="none" stroke="currentColor" stroke-width="2" />
+        <path d="M2 5 L12 13 L22 5" fill="none" stroke="currentColor" stroke-width="2" />
+      </svg>
+    </button>
+
+
     <!-- 3. 左侧专辑 -->
     <aside class="music-panel panel-left">
       <h3 class="album-header">
@@ -130,6 +139,29 @@
         </li>
       </ul>
     </aside>
+  </div>
+
+  <!-- 留言板面板 - 独立modal在main-wrapper外 -->
+  <div class="comment-overlay" id="comment-overlay"></div>
+  <div class="comment-panel" id="comment-panel">
+    <button class="comment-close" id="comment-close" title="关闭">×</button>
+    <div class="corner tl"></div>
+    <div class="corner tr"></div>
+    <div class="corner bl"></div>
+    <div class="corner br"></div>
+    <div class="comment-header">
+      <span class="deco-pixel"></span> 留言板
+      <small>Message Board</small>
+    </div>
+    <div class="comment-body">
+      <div id="tcomment"></div>
+    </div>
+    <!-- 竖屏底部Home键 -->
+    <button class="comment-home" id="comment-home" title="收起">
+      <svg viewBox="0 0 24 24" width="24" height="24">
+        <path d="M12 5 L3 12 L5 12 L5 20 L10 20 L10 14 L14 14 L14 20 L19 20 L19 12 L21 12 Z" fill="currentColor" />
+      </svg>
+    </button>
   </div>
 
   <!-- 胶囊播放器 -->
@@ -182,6 +214,7 @@
   </div>
 
   <script src="music/lyrics.js"></script>
+  <script src="https://registry.npmmirror.com/twikoo/1.6.44/files/dist/twikoo.min.js"></script>
   <script src="script.js"></script>
 </body>
 

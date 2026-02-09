@@ -75,6 +75,26 @@ function updatePlayState(isPlaying) {
     iconPause.style.display = isPlaying ? 'block' : 'none';
 }
 
+// === 首次交互自动播放 ===
+let hasTriedAutoPlay = false;
+
+function tryAutoPlay() {
+    if (hasTriedAutoPlay) return;
+    hasTriedAutoPlay = true;
+
+    // 如果没有在播放且没有选择过歌曲，随机播放一首
+    if (audio && audio.paused && currentSongIndex === -1) {
+        const randomIndex = Math.floor(Math.random() * allSongs.length);
+        playIndex(randomIndex);
+    }
+}
+
+// 监听各种交互事件来触发首次播放
+['click', 'touchstart', 'keydown', 'scroll'].forEach(eventType => {
+    document.addEventListener(eventType, tryAutoPlay, { once: true, passive: true });
+});
+
+
 if (btnOrder) {
     btnOrder.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -609,3 +629,118 @@ setTimeout(() => {
         }
     }, 3000);
 }, 1000);
+
+// === 6. 留言板逻辑 ===
+const envelopeBtn = document.getElementById('envelope-btn');
+const commentPanel = document.getElementById('comment-panel');
+const commentOverlay = document.getElementById('comment-overlay');
+const commentClose = document.getElementById('comment-close');
+const centerContainer = document.querySelector('.center-container');
+const centerCard = document.querySelector('.center-card');
+let isCommentOpen = false;
+let twikooInitialized = false;
+
+function isMobile() {
+    return window.innerWidth <= 1100;
+}
+
+function openCommentPanel() {
+    if (isCommentOpen) return;
+    isCommentOpen = true;
+
+    // 初始化Twikoo（只初始化一次）
+    if (!twikooInitialized && window.twikoo) {
+        twikoo.init({
+            envId: 'https://worldlinechanger-twikoo.hf.space',
+            el: '#tcomment',
+        });
+        twikooInitialized = true;
+    }
+
+    commentPanel.classList.add('open');
+    envelopeBtn.classList.add('active');
+    if (commentOverlay) commentOverlay.classList.add('open');
+
+    if (!isMobile()) {
+        centerContainer.classList.add('shifted');
+        centerCard.classList.add('compact');
+        envelopeBtn.classList.add('shifted');
+    } else {
+        // 移动端锁定滚动 - 简化方案避免影响fixed元素
+        document.documentElement.style.overflow = 'hidden';
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeCommentPanel() {
+    if (!isCommentOpen) return;
+    isCommentOpen = false;
+
+    commentPanel.classList.remove('open');
+    envelopeBtn.classList.remove('active');
+    envelopeBtn.classList.remove('shifted');
+    if (commentOverlay) commentOverlay.classList.remove('open');
+    centerContainer.classList.remove('shifted');
+    centerCard.classList.remove('compact');
+
+    // 恢复滚动
+    document.documentElement.style.overflow = '';
+    document.body.style.overflow = '';
+}
+
+function toggleCommentPanel() {
+    if (isCommentOpen) {
+        closeCommentPanel();
+    } else {
+        openCommentPanel();
+    }
+}
+
+if (envelopeBtn) {
+    envelopeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        tryAutoPlay(); // 触发首次播放
+        toggleCommentPanel();
+    });
+}
+
+if (commentClose) {
+    commentClose.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeCommentPanel();
+    });
+}
+
+if (commentOverlay) {
+    commentOverlay.addEventListener('click', closeCommentPanel);
+}
+
+// Home键点击事件
+const commentHome = document.getElementById('comment-home');
+if (commentHome) {
+    commentHome.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeCommentPanel();
+    });
+}
+
+
+// 窗口大小变化时处理
+window.addEventListener('resize', () => {
+    if (isCommentOpen) {
+        if (isMobile()) {
+            centerContainer.classList.remove('shifted');
+            centerCard.classList.remove('compact');
+            envelopeBtn.classList.remove('shifted');
+        } else {
+            centerContainer.classList.add('shifted');
+            centerCard.classList.add('compact');
+            envelopeBtn.classList.add('shifted');
+            // 恢复滚动（从移动端切换到桌面端）
+            document.body.style.overflow = '';
+            document.body.style.position = '';
+            document.body.style.width = '';
+            document.body.style.top = '';
+        }
+    }
+});
