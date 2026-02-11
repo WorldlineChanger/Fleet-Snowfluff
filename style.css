@@ -534,7 +534,7 @@ body {
   left: 50%;
   transform: translateX(-50%);
   height: 56px;
-  width: 480px;
+  width: 420px;
   background: rgba(15, 17, 35, 0.95);
   border: 1px solid var(--border);
   border-radius: 50px;
@@ -542,24 +542,301 @@ body {
   z-index: var(--z-ui);
   box-shadow: 0 5px 25px rgba(0, 0, 0, 0.6);
   display: flex;
-  align-items: center;
-  padding: 0 14px;
-  transition: width 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), border-color 0.3s;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 16px;
+  transition: height 0.4s cubic-bezier(0.25, 0.8, 0.25, 1),
+    width 0.4s cubic-bezier(0.25, 0.8, 0.25, 1),
+    border-radius 0.4s ease,
+    border-color 0.3s;
   overflow: hidden;
 }
 
-.player-capsule:hover {
-  width: 720px;
+.player-capsule:hover,
+.player-capsule.expanded {
+  height: 110px;
+  width: 560px;
+  border-radius: 20px;
   border-color: var(--accent-blue);
   box-shadow: 0 8px 30px rgba(160, 196, 255, 0.2);
 }
 
-.p-main {
+/* --- 收起行：唱片 + 歌名 + 播放 + 顺序 --- */
+.p-compact {
   display: flex;
   align-items: center;
-  gap: 14px;
-  flex-grow: 1;
+  gap: 12px;
+  min-height: 54px;
+  flex-shrink: 0;
+}
+
+/* 旋转唱片封面 */
+.disc-cover {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  animation: disc-spin 8s linear infinite paused;
+  box-shadow: 0 0 10px rgba(160, 196, 255, 0.2);
+}
+
+.disc-cover.spinning {
+  animation-play-state: running;
+}
+
+.disc-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+@keyframes disc-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 滚动歌名 + 渐隐遮罩 */
+.song-name-wrapper {
+  flex: 1;
   min-width: 0;
+  overflow: hidden;
+  position: relative;
+  height: 24px;
+  mask-image: linear-gradient(90deg, transparent 0%, black 8%, black 92%, transparent 100%);
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, black 8%, black 92%, transparent 100%);
+}
+
+.song-name-scroll {
+  white-space: nowrap;
+  display: inline-block;
+  padding: 0 6px;
+  line-height: 24px;
+}
+
+.song-name-scroll.scrolling {
+  animation: marquee-scroll var(--scroll-duration, 10s) linear infinite;
+}
+
+@keyframes marquee-scroll {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+#song-name-text {
+  font-size: 14px;
+  color: var(--text-glow);
+  font-family: 'DotGothic16', sans-serif;
+  letter-spacing: 0.5px;
+}
+
+/* --- 展开行：进度条 + 音量 --- */
+.p-expand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  opacity: 0;
+  max-height: 0;
+  overflow: hidden;
+  transition: opacity 0.3s ease 0.1s, max-height 0.3s ease;
+  padding: 0 4px;
+}
+
+.player-capsule:hover .p-expand,
+.player-capsule.expanded .p-expand {
+  opacity: 1;
+  max-height: 40px;
+}
+
+.progress-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.time-label {
+  font-size: 11px;
+  font-family: monospace;
+  color: rgba(224, 230, 255, 0.6);
+  white-space: nowrap;
+  min-width: 36px;
+  user-select: none;
+}
+
+/* 自定义进度条 */
+.progress-track {
+  position: relative;
+  flex: 1;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.progress-bg {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 4px;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 2px;
+}
+
+.progress-fill {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 0%;
+  height: 4px;
+  transform: translateY(-50%);
+  background: linear-gradient(90deg, var(--accent-blue), var(--accent-pink));
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+.progress-thumb {
+  position: absolute;
+  top: 50%;
+  left: 0%;
+  width: 12px;
+  height: 12px;
+  background: var(--accent-pink);
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  box-shadow: 0 0 6px var(--accent-pink);
+  transition: transform 0.15s ease;
+  pointer-events: none;
+}
+
+.progress-track:hover .progress-thumb,
+.progress-track.dragging .progress-thumb {
+  transform: translate(-50%, -50%) scale(1);
+}
+
+/* 音量控制 */
+.vol-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.vol-svg {
+  width: 14px;
+  height: 14px;
+  fill: rgba(224, 230, 255, 0.5);
+  flex-shrink: 0;
+}
+
+.vol-track {
+  width: 60px !important;
+}
+
+input[type=range] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  background: transparent;
+  display: block;
+  margin: 0;
+}
+
+input[type=range]::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+}
+
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 12px;
+  width: 12px;
+  background: var(--accent-pink);
+  margin-top: -4px;
+  border-radius: 50%;
+  box-shadow: 0 0 5px var(--accent-pink);
+  transition: transform 0.1s;
+}
+
+input[type=range]:hover::-webkit-slider-thumb {
+  transform: scale(1.2);
+  background: #fff;
+}
+
+/* --- Canvas 波形 --- */
+.visualizer-canvas {
+  position: absolute;
+  bottom: 100%;
+  left: 16px;
+  right: 16px;
+  height: 40px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.visualizer-canvas.active {
+  opacity: 1;
+}
+
+/* --- 竖屏专用控件行 (PC隐藏) --- */
+.p-mobile-controls {
+  display: none;
+}
+
+/* .btn-sm 缩小按钮 */
+.btn-sm {
+  width: 30px;
+  height: 30px;
+}
+
+.btn-sm .icon-svg {
+  width: 14px;
+  height: 14px;
+}
+
+.btn-play-main {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-pink), var(--accent-blue));
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--bg-deep);
+  transition: all 0.2s;
+  flex-shrink: 0;
+  box-shadow: 0 0 15px rgba(255, 183, 197, 0.3);
+}
+
+.btn-play-main .icon-svg {
+  width: 22px;
+  height: 22px;
+  fill: var(--bg-deep);
+}
+
+.btn-play-main:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 25px rgba(255, 183, 197, 0.5);
 }
 
 .btn-circle {
@@ -590,138 +867,9 @@ body {
   fill: currentColor;
 }
 
-.progress-wrapper {
-  flex-grow: 1;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.progress-track {
-  position: relative;
-  width: 100%;
-  height: 20px;
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-}
-
-/* === Visualizer === */
-.visualizer-container {
-  position: absolute;
-  bottom: 50%;
-  /* Align with top of capsule roughly or just above */
-  left: 20px;
-  right: 20px;
-  height: 30px;
-  display: flex;
-  align-items: flex-end;
-  gap: 4px;
-  /* Pixel gap */
-  z-index: -1;
-  /* Behind content? No, above capsule maybe. */
-  /* Wait, "above capsule" means physically on top of it or Y-axis above? 
-       "Capsule above increase pixel wave effect" -> Likely sitting on top edge of capsule.
-    */
-  transform: translateY(-38px);
-  /* Move up */
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-
-.player-capsule:hover .visualizer-container,
-.visualizer-container.active {
-  opacity: 1;
-}
-
-.v-bar {
-  flex: 1;
-  background: var(--accent-pink);
-  min-height: 4px;
-  max-height: 100%;
-  /* Pixel look */
-  image-rendering: pixelated;
-  transition: height 0.1s ease;
-}
-
-.v-bar:nth-child(even) {
-  background: var(--accent-blue);
-}
-
 /* Gradient Pixel */
 .gradient-pixel {
   background: linear-gradient(135deg, var(--accent-blue), var(--accent-pink)) !important;
-}
-
-input[type=range] {
-  -webkit-appearance: none;
-  width: 100%;
-  background: transparent;
-  display: block;
-  margin: 0;
-}
-
-input[type=range]::-webkit-slider-runnable-track {
-  width: 100%;
-  height: 6px;
-  background: rgba(255, 255, 255, 0.15);
-  /* Gradient overlay for progress */
-  background-image: linear-gradient(90deg, var(--accent-blue), var(--accent-pink));
-  background-size: var(--seek-before-width, 0%) 100%;
-  background-repeat: no-repeat;
-  border-radius: 3px;
-}
-
-input[type=range]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  height: 14px;
-  width: 8px;
-  background: var(--accent-pink);
-  margin-top: -4px;
-  border-radius: 2px;
-  box-shadow: 0 0 5px var(--accent-pink);
-  transition: transform 0.1s;
-}
-
-input[type=range]:hover::-webkit-slider-thumb {
-  transform: scale(1.2);
-  background: #fff;
-}
-
-.time-display {
-  font-size: 12px;
-  font-family: monospace;
-  color: var(--accent-blue);
-  white-space: nowrap;
-  min-width: 90px;
-  text-align: right;
-}
-
-.extra-controls {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  width: 0;
-  opacity: 0;
-  transition: all 0.4s ease;
-  transform: translateX(20px);
-  margin-left: 0;
-  padding-left: 0;
-  white-space: nowrap;
-}
-
-.player-capsule:hover .extra-controls {
-  width: auto;
-  opacity: 1;
-  transform: translateX(0);
-  margin-left: 14px;
-  padding-left: 14px;
-  border-left: 1px solid rgba(255, 255, 255, 0.15);
-}
-
-.vol-track {
-  width: 70px !important;
 }
 
 /* === Chibi Floating Animation Classes === */
@@ -953,11 +1101,10 @@ input[type=range]:hover::-webkit-slider-thumb {
   .player-capsule {
     width: 96%;
     max-width: 500px;
-    height: auto;
+    height: auto !important;
     bottom: 10px;
-    padding: 10px 15px;
-    border-radius: 12px;
-    flex-direction: column;
+    padding: 12px 16px;
+    border-radius: 16px;
     overflow: visible;
     /* 移动端禁用模糊以提升性能 */
     backdrop-filter: none;
@@ -965,50 +1112,59 @@ input[type=range]:hover::-webkit-slider-thumb {
     background: rgba(15, 17, 35, 1);
   }
 
-  .player-capsule:hover {
+  .player-capsule:hover,
+  .player-capsule.expanded {
     width: 96%;
+    height: auto !important;
+    border-radius: 16px;
+  }
+
+  /* 隐藏横屏专用元素 */
+  .p-compact {
+    display: none;
+  }
+
+  /* 展开区域在竖屏始终显示 */
+  .p-expand {
+    opacity: 1;
+    max-height: none;
+    overflow: visible;
+    order: 1;
+    padding: 0;
+    margin-bottom: 10px;
+  }
+
+  .vol-wrap {
+    display: none;
   }
 
   .progress-wrapper {
-    width: 100%;
-    margin-bottom: 8px;
-    order: 1;
+    gap: 10px;
   }
 
-  input[type=range]::-webkit-slider-thumb {
-    transform: scale(1.2);
+  .time-label {
+    font-size: 12px;
+    color: rgba(224, 230, 255, 0.7);
   }
 
-  .p-main {
-    width: 100%;
-    justify-content: space-between;
+  .progress-thumb {
+    transform: translate(-50%, -50%) scale(1) !important;
+  }
+
+  /* 竖屏控件行显示 */
+  .p-mobile-controls {
+    display: flex !important;
+    align-items: center;
+    justify-content: space-around;
     order: 2;
-    flex-grow: 0;
-    gap: 0;
+    padding: 0 10px;
   }
 
-  .time-display {
-    text-align: left;
-    min-width: auto;
-    margin-left: 10px;
-    flex-grow: 1;
-  }
-
-  .extra-controls {
-    display: flex;
-    width: auto;
-    opacity: 1;
-    transform: none;
-    order: 3;
-    position: static;
-    margin: 0;
-    padding: 0;
-    border: none;
-  }
-
-  .vol-svg,
-  .vol-track {
-    display: none;
+  /* Canvas波形竖屏适配 */
+  .visualizer-canvas {
+    left: 12px;
+    right: 12px;
+    height: 35px;
   }
 
   .chibi-wrapper {

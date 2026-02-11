@@ -22,20 +22,82 @@ const allSongs = Array.from(document.querySelectorAll('.song-list li'));
 const btnPlayPause = document.getElementById('btn-play-pause');
 const iconPlay = document.getElementById('icon-play');
 const iconPause = document.getElementById('icon-pause');
-const progBar = document.getElementById('prog-bar');
-const timeTxt = document.getElementById('time-txt');
+const btnPlayPauseM = document.getElementById('btn-play-pause-m');
+const iconPlayM = document.getElementById('icon-play-m');
+const iconPauseM = document.getElementById('icon-pause-m');
 const volSlider = document.getElementById('vol-slider');
 const btnOrder = document.getElementById('btn-order');
+const btnOrderM = document.getElementById('btn-order-m');
 const iconsOrder = [
     document.getElementById('icon-order-list'),
     document.getElementById('icon-order-single'),
     document.getElementById('icon-order-shuffle')
 ];
 
+// 新进度条 DOM
+const progressTrack = document.getElementById('progress-track');
+const progressFill = document.getElementById('progress-fill');
+const progressThumb = document.getElementById('progress-thumb');
+const timeCur = document.getElementById('time-cur');
+const timeDur = document.getElementById('time-dur');
+
+// 封面 & 歌名
+const discCover = document.getElementById('disc-cover');
+const discCoverImg = document.getElementById('disc-cover-img');
+const songNameText = document.getElementById('song-name-text');
+const songNameScroll = document.getElementById('song-name-scroll');
+
+// 上下曲按钮
+const btnPrev = document.getElementById('btn-prev');
+const btnNext = document.getElementById('btn-next');
+
 let currentSongIndex = -1;
 let isDraggingProgress = false;
 let playMode = 0;
 if (audio) audio.volume = 0.5;
+
+// === 封面映射 ===
+const coverMap = {
+    'Unwavering_Startorch': 'music/Cover/星炬不熄.jpg',
+    'Paper_Plane': 'music/Cover/飞行雪绒.jpg',
+    'Indigo_Universe': 'music/Cover/飞行雪绒.jpg',
+    'Fallen_Petals': 'music/Cover/飞行雪绒.jpg',
+    'A_Small_Miracle': 'music/Cover/星轨消逝之夜.jpg',
+    'Voyaging_Stars_Farewell': 'music/Cover/星轨消逝之夜.jpg',
+    'Vernal_Days_Dreamed_by_the_Star': 'music/Cover/星轨消逝之夜.jpg'
+};
+
+function getCoverForSrc(src) {
+    const filename = src.split('/').pop().replace('.mp3', '');
+    for (const key in coverMap) {
+        if (filename.startsWith(key)) return coverMap[key];
+    }
+    return 'music/Cover/飞行雪绒.jpg';
+}
+
+// === 歌名显示 ===
+function updateSongName(li) {
+    if (!songNameText || !songNameScroll) return;
+    const title = li.querySelector('.song-title')?.textContent || '';
+    const en = li.querySelector('.song-en')?.textContent || '';
+    const display = en ? `${title} · ${en}` : title;
+    songNameText.textContent = display;
+    // 复制一份文本用于无缝滚动
+    songNameScroll.classList.remove('scrolling');
+    songNameScroll.innerHTML = `<span id="song-name-text">${display}</span>`;
+    // 检测是否需要滚动
+    requestAnimationFrame(() => {
+        const textW = songNameScroll.scrollWidth;
+        const wrapW = songNameScroll.parentElement.offsetWidth;
+        if (textW > wrapW) {
+            // 双份文本实现无缝
+            songNameScroll.innerHTML = `<span>${display}\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0${display}\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0</span>`;
+            const duration = Math.max(6, textW / 30);
+            songNameScroll.style.setProperty('--scroll-duration', duration + 's');
+            songNameScroll.classList.add('scrolling');
+        }
+    });
+}
 
 function playIndex(index) {
     if (index < 0 || index >= allSongs.length) return;
@@ -46,15 +108,18 @@ function playIndex(index) {
     li.classList.add('active');
     currentSongIndex = index;
 
+    // 更新封面
+    if (discCoverImg) discCoverImg.src = getCoverForSrc(src);
+
+    // 更新歌名
+    updateSongName(li);
+
     if (audio.getAttribute('src') !== src) {
         audio.src = src;
         audio.load();
         loadLyrics(src);
+        connectAudioAnalyser();
     } else {
-        // Even if src is same, maybe reload lyrics just in case? Or if it was cleared.
-        // But usually loop or replay doesn't need reload.
-        // However, initial load might need it if src was set in HTML.
-        // Let's just call it if we are switching songs or if it's the first play.
         if (lyricsData.length === 0) loadLyrics(src);
     }
 
@@ -73,6 +138,10 @@ function togglePlay() {
 function updatePlayState(isPlaying) {
     iconPlay.style.display = isPlaying ? 'none' : 'block';
     iconPause.style.display = isPlaying ? 'block' : 'none';
+    if (iconPlayM) iconPlayM.style.display = isPlaying ? 'none' : 'block';
+    if (iconPauseM) iconPauseM.style.display = isPlaying ? 'block' : 'none';
+    // 唱片旋转
+    if (discCover) discCover.classList.toggle('spinning', isPlaying);
 }
 
 // === 首次交互自动播放 ===
@@ -118,13 +187,19 @@ if (audio) {
     });
 
 
-    audio.addEventListener('loadedmetadata', () => timeTxt.textContent = `${formatTime(audio.currentTime)} / ${formatTime(audio.duration)}`);
+    audio.addEventListener('loadedmetadata', () => {
+        if (timeCur) timeCur.textContent = formatTime(audio.currentTime);
+        if (timeDur) timeDur.textContent = formatTime(audio.duration);
+    });
 
-    // Lyrics Sync
+    // Lyrics Sync + Progress Update
     audio.addEventListener('timeupdate', () => {
         if (!isDraggingProgress && audio.duration) {
-            progBar.value = (audio.currentTime / audio.duration) * 100;
-            timeTxt.textContent = `${formatTime(audio.currentTime)} / ${formatTime(audio.duration)}`;
+            const pct = (audio.currentTime / audio.duration) * 100;
+            if (progressFill) progressFill.style.width = pct + '%';
+            if (progressThumb) progressThumb.style.left = pct + '%';
+            if (timeCur) timeCur.textContent = formatTime(audio.currentTime);
+            if (timeDur) timeDur.textContent = formatTime(audio.duration);
         }
         syncLyrics(audio.currentTime);
     });
@@ -294,48 +369,103 @@ const formatTime = (s) => {
     return `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
 };
 
-if (progBar) {
-    progBar.addEventListener('input', (e) => {
+// === 自定义进度条拖拽 ===
+function seekFromEvent(e, track) {
+    const rect = track.getBoundingClientRect();
+    const touch = e.changedTouches ? e.changedTouches[0] : (e.touches ? e.touches[0] : null);
+    const clientX = touch ? touch.clientX : e.clientX;
+    let pct = (clientX - rect.left) / rect.width;
+    pct = Math.max(0, Math.min(1, pct));
+    return pct;
+}
+
+if (progressTrack && audio) {
+    const startDrag = (e) => {
         isDraggingProgress = true;
-        const time = (e.target.value / 100) * audio.duration;
-        timeTxt.textContent = `${formatTime(time)} / ${formatTime(audio.duration)}`;
-        // Sync lyrics while dragging? Optional.
-        syncLyrics(time);
-    });
-    progBar.addEventListener('change', (e) => {
+        progressTrack.classList.add('dragging');
+        const pct = seekFromEvent(e, progressTrack);
+        if (audio.duration) {
+            const time = pct * audio.duration;
+            progressFill.style.width = (pct * 100) + '%';
+            progressThumb.style.left = (pct * 100) + '%';
+            if (timeCur) timeCur.textContent = formatTime(time);
+            syncLyrics(time);
+        }
+    };
+    const moveDrag = (e) => {
+        if (!isDraggingProgress) return;
+        e.preventDefault();
+        const pct = seekFromEvent(e, progressTrack);
+        if (audio.duration) {
+            const time = pct * audio.duration;
+            progressFill.style.width = (pct * 100) + '%';
+            progressThumb.style.left = (pct * 100) + '%';
+            if (timeCur) timeCur.textContent = formatTime(time);
+            syncLyrics(time);
+        }
+    };
+    const endDrag = (e) => {
+        if (!isDraggingProgress) return;
         isDraggingProgress = false;
-        if (audio.duration) audio.currentTime = (e.target.value / 100) * audio.duration;
-    });
+        progressTrack.classList.remove('dragging');
+        const pct = seekFromEvent(e, progressTrack);
+        if (audio.duration) audio.currentTime = pct * audio.duration;
+    };
+
+    progressTrack.addEventListener('mousedown', startDrag);
+    document.addEventListener('mousemove', moveDrag);
+    document.addEventListener('mouseup', endDrag);
+    progressTrack.addEventListener('touchstart', startDrag, { passive: false });
+    document.addEventListener('touchmove', moveDrag, { passive: false });
+    document.addEventListener('touchend', endDrag);
 }
 
 if (volSlider && audio) volSlider.addEventListener('input', (e) => audio.volume = e.target.value);
 
-// Update playIndex to load lyrics
-const oldPlayIndex = playIndex; // Store ref if needed, or just rewrite
-// We'll rewrite playIndex to be safe or just modify the existing block.
-// Actually, I can just modify `playIndex` inside the loop logic or re-declare it if not const.
-// It is `function playIndex`, so I can overwrite it or just modify the `playIndex` implementation
-// Wait, replacing a function implementation in this tool might be tricky if I don't target the whole block.
-// I'll target the existing specific lines in `playIndex` to insert `loadLyrics`.
+// === 上一曲 / 下一曲 ===
+function playPrev() {
+    if (allSongs.length === 0) return;
+    let idx = currentSongIndex - 1;
+    if (idx < 0) idx = allSongs.length - 1;
+    playIndex(idx);
+}
+function playNext() {
+    if (allSongs.length === 0) return;
+    let idx = currentSongIndex + 1;
+    if (idx >= allSongs.length) idx = 0;
+    playIndex(idx);
+}
 
-// Let's just hook into the existing playIndex by redefining it or inserting the call.
-// The code I am replacing above includes the end of `playIndex` so I have to be careful.
-// Wait, the ReplacementContent above STARTS with `});` which is `audio.addEventListener('ended', ...)` closure?
-// No, I need to check where I am replacing.
-// The `StartLine` target was `audio.addEventListener('timeupdate', ...)` block in original code.
-// I will target the `timeupdate` listener to replace it with one that includes `syncLyrics`,
-// AND I need to inject `loadLyrics(src)` into `playIndex`.
+if (btnPrev) btnPrev.addEventListener('click', (e) => { e.stopPropagation(); playPrev(); });
+if (btnNext) btnNext.addEventListener('click', (e) => { e.stopPropagation(); playNext(); });
+if (btnPlayPauseM) btnPlayPauseM.addEventListener('click', (e) => { e.stopPropagation(); togglePlay(); });
 
-// Let's do the `timeupdate` replacement + global function defs first (as above).
-// THEN I will do a separate edit to `playIndex` to call `loadLyrics`.
+// 竖屏播放顺序按钮同步
+if (btnOrderM) {
+    btnOrderM.addEventListener('click', (e) => {
+        e.stopPropagation();
+        playMode = (playMode + 1) % 3;
+        iconsOrder.forEach((icon, i) => icon.style.display = (i === playMode) ? 'block' : 'none');
+        // 同步竖屏按钮图标
+        const svgPaths = [
+            'M17 16l-4-4V8.82C14.16 8.4 15 7.3 15 6c0-1.66-1.34-3-3-3S9 4.34 9 6c0 1.3.84 2.4 2 2.82V12l-4 4H3v5h5v-3.05l4-4.2 4 4.2V21h5v-5h-4z',
+            'M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4zm-4-2V9h-1l-2 1v1h1.5v4H13z',
+            'M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z'
+        ];
+        const svg = btnOrderM.querySelector('svg');
+        if (svg) svg.innerHTML = `<path d="${svgPaths[playMode]}" />`;
+    });
+}
 
-/* Current Plan:
-1. Replace `timeupdate` block with new one + add all lyrics functions at the end of the file (or before Chibi).
-2. Modify `playIndex` to call `loadLyrics`.
-*/
-
-// Changing the ReplacementContent to only target the timeupdate block and add functions.
-
+// 竖屏音量按钮切换静音
+const btnVolToggle = document.getElementById('btn-vol-toggle');
+if (btnVolToggle && audio) {
+    btnVolToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        audio.muted = !audio.muted;
+        btnVolToggle.style.opacity = audio.muted ? '0.4' : '1';
+    });
+}
 
 allSongs.forEach((li, index) => li.addEventListener('click', (e) => { e.stopPropagation(); playIndex(index); }));
 if (btnPlayPause) btnPlayPause.addEventListener('click', (e) => { e.stopPropagation(); togglePlay(); });
@@ -600,54 +730,113 @@ class Chibi {
     }
 }
 
-// === 5. Visualizer & Progress Gradient ===
-const visualizerBox = document.getElementById('visualizer');
-const BAR_COUNT = 30; // 30 pixels/bars roughly
-let bars = [];
+// === 5. Web Audio API Visualizer ===
+const vizCanvas = document.getElementById('visualizer-canvas');
+let audioCtx = null;
+let analyser = null;
+let audioSource = null;
+let vizAnimId = null;
+const FFT_SIZE = 128;
 
-function initVisualizer() {
-    if (!visualizerBox) return;
-    visualizerBox.innerHTML = '';
-    bars = [];
-    for (let i = 0; i < BAR_COUNT; i++) {
-        const d = document.createElement('div');
-        d.className = 'v-bar';
-        visualizerBox.appendChild(d);
-        bars.push(d);
+function connectAudioAnalyser() {
+    if (!audio || !vizCanvas) return;
+    if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        analyser = audioCtx.createAnalyser();
+        analyser.fftSize = FFT_SIZE;
+        analyser.smoothingTimeConstant = 0.75;
+        audioSource = audioCtx.createMediaElementSource(audio);
+        audioSource.connect(analyser);
+        analyser.connect(audioCtx.destination);
     }
+    if (audioCtx.state === 'suspended') audioCtx.resume();
 }
-initVisualizer();
 
-function updateVisualizer() {
-    if (!audio.paused) {
-        visualizerBox.classList.add('active');
-        // Fake data
-        bars.forEach((bar, i) => {
-            // Random height between 20% and 100%
-            const h = 20 + Math.random() * 80;
-            // Slightly smooth random - maybe perlin noise? Nah, simple random is enough for "pixel glitch" feel
-            bar.style.height = `${h}%`;
-            // Random toggle for pixelated look sometimes?
-        });
+function drawPixelVisualizer() {
+    if (!vizCanvas || !analyser) {
+        vizAnimId = requestAnimationFrame(drawPixelVisualizer);
+        return;
+    }
+
+    const ctx = vizCanvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    const rect = vizCanvas.getBoundingClientRect();
+    const w = rect.width;
+    const h = rect.height;
+
+    if (vizCanvas.width !== w * dpr || vizCanvas.height !== h * dpr) {
+        vizCanvas.width = w * dpr;
+        vizCanvas.height = h * dpr;
+        ctx.scale(dpr, dpr);
+    }
+
+    ctx.clearRect(0, 0, w, h);
+
+    if (audio.paused) {
+        vizCanvas.classList.remove('active');
+        vizAnimId = requestAnimationFrame(drawPixelVisualizer);
+        return;
+    }
+
+    vizCanvas.classList.add('active');
+
+    const bufLen = analyser.frequencyBinCount;
+    const dataArr = new Uint8Array(bufLen);
+    analyser.getByteFrequencyData(dataArr);
+
+    // 像素风方块参数
+    const barCount = Math.min(32, bufLen);
+    const pixelSize = 3;
+    const gap = 2;
+    const totalBarW = pixelSize;
+    const totalW = barCount * (totalBarW + gap) - gap;
+    const startX = (w - totalW) / 2;
+
+    // 粉蓝渐变配色
+    const pink = [255, 183, 197];
+    const blue = [160, 196, 255];
+
+    for (let i = 0; i < barCount; i++) {
+        const dataIndex = Math.floor(i * (bufLen / barCount));
+        const val = dataArr[dataIndex] / 255;
+        const barH = Math.max(pixelSize, val * h * 0.9);
+        const blocks = Math.ceil(barH / (pixelSize + 1));
+        const x = startX + i * (totalBarW + gap);
+
+        for (let b = 0; b < blocks; b++) {
+            const y = h - (b + 1) * (pixelSize + 1);
+            if (y < 0) break;
+            const t = b / Math.max(1, blocks - 1);
+            const r = Math.round(pink[0] + (blue[0] - pink[0]) * t);
+            const g = Math.round(pink[1] + (blue[1] - pink[1]) * t);
+            const bv = Math.round(pink[2] + (blue[2] - pink[2]) * t);
+            const alpha = 0.6 + val * 0.4;
+            ctx.fillStyle = `rgba(${r},${g},${bv},${alpha})`;
+            ctx.fillRect(x, y, pixelSize, pixelSize);
+        }
+
+        // 底部辉光
+        if (val > 0.1) {
+            const glowAlpha = val * 0.15;
+            ctx.fillStyle = `rgba(255,183,197,${glowAlpha})`;
+            ctx.fillRect(x - 1, h - 2, pixelSize + 2, 2);
+        }
+    }
+
+    vizAnimId = requestAnimationFrame(drawPixelVisualizer);
+}
+
+// 页面可见性控制
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        if (vizAnimId) { cancelAnimationFrame(vizAnimId); vizAnimId = null; }
     } else {
-        visualizerBox.classList.remove('active');
-        bars.forEach(bar => bar.style.height = '10%');
+        if (!vizAnimId) vizAnimId = requestAnimationFrame(drawPixelVisualizer);
     }
-}
-setInterval(updateVisualizer, window.innerWidth < 800 ? 150 : 100);
+});
 
-// Update progress bar color
-function updateProgressColor() {
-    if (!progBar) return;
-    // Calculation: value is 0-100
-    const val = progBar.value;
-    progBar.style.setProperty('--seek-before-width', `${val}%`);
-}
-
-if (progBar) {
-    progBar.addEventListener('input', updateProgressColor);
-    audio.addEventListener('timeupdate', updateProgressColor);
-}
+// 启动波形绘制
+vizAnimId = requestAnimationFrame(drawPixelVisualizer);
 
 // Init Chibis
 setTimeout(() => {
