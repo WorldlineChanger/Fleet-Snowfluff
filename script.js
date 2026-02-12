@@ -87,10 +87,10 @@ function updateSongName(li) {
     setupMarquee(songNameScroll, display);
 
     // Update Mobile
-    const mText = document.getElementById('mobile-song-text');
     const mScroll = document.getElementById('mobile-song-scroll');
-    if (mText && mScroll) {
-        mText.textContent = display;
+    if (mScroll) {
+        // If the inner span is gone (replaced by marquee), we re-create stucture via setupMarquee
+        // setupMarquee will clear innerHTML and create a new span.
         setupMarquee(mScroll, display);
     }
 }
@@ -842,13 +842,15 @@ function drawPixelVisualizer() {
         ctx.scale(dpr, dpr);
     }
 
-    ctx.clearRect(0, 0, w, h);
-
     if (audio.paused) {
-        vizCanvas.classList.remove('active');
+        // Keep 'active' class so opacity stays 1.
+        // Don't clear rect -> freezes the last frame.
+        // Just loop to check when it plays again.
         vizAnimId = requestAnimationFrame(drawPixelVisualizer);
         return;
     }
+
+    ctx.clearRect(0, 0, w, h);
 
     vizCanvas.classList.add('active');
 

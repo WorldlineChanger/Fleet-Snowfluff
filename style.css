@@ -573,7 +573,6 @@ body {
   pointer-events: auto;
 }
 
-.player-capsule:hover,
 .player-capsule.expanded {
   height: 110px;
   width: 560px;
@@ -581,14 +580,23 @@ body {
   border-color: var(--accent-blue);
   box-shadow: 0 8px 30px rgba(160, 196, 255, 0.2);
   transform: translateY(-10px);
-  /* Move up slightly when expanded */
   justify-content: space-evenly;
-  /* Ensure rows are spaced evenly */
 }
 
-.player-capsule:hover .disc-cover {
-  transform: scale(1.6);
-  /* Larger scale 1.6x */
+@media (hover: hover) {
+  .player-capsule:hover {
+    height: 110px;
+    width: 560px;
+    border-radius: 20px;
+    border-color: var(--accent-blue);
+    box-shadow: 0 8px 30px rgba(160, 196, 255, 0.2);
+    transform: translateY(-10px);
+    justify-content: space-evenly;
+  }
+
+  .player-capsule:hover .disc-cover {
+    transform: scale(1.6);
+  }
 }
 
 /* --- 收起行：唱片 + 歌名 + 播放 + 顺序 --- */
@@ -683,10 +691,16 @@ body {
   padding: 0 4px;
 }
 
-.player-capsule:hover .p-expand,
 .player-capsule.expanded .p-expand {
   opacity: 1;
   max-height: 40px;
+}
+
+@media (hover: hover) {
+  .player-capsule:hover .p-expand {
+    opacity: 1;
+    max-height: 40px;
+  }
 }
 
 .progress-wrapper {
@@ -955,11 +969,10 @@ input[type=range]:hover::-webkit-slider-thumb {
 .envelope-btn {
   position: fixed;
   top: auto;
-  /* Adjusted height to be closer to text box */
   bottom: 22%;
-  /* Position below center (approx) */
-  right: 60px;
-  /* Slightly more inward */
+  left: 50%;
+  /* Centered horizontally */
+  transform: translateX(-50%);
   width: 52px;
   height: 52px;
   border-radius: 50%;
@@ -979,584 +992,37 @@ input[type=range]:hover::-webkit-slider-thumb {
   .envelope-btn:hover {
     background: rgba(255, 255, 255, 0.1);
     border-color: var(--accent-pink);
-    transform: scale(1.1);
-    /* Removed translation */
+    transform: translateX(-50%) scale(1.1);
+    /* Maintain centering + scale */
     box-shadow: 0 0 15px var(--accent-pink);
   }
+}
+
+.envelope-btn.active {
+  background: linear-gradient(135deg, var(--accent-pink), var(--accent-blue));
+  border-color: transparent;
+}
+
+/* Move left when comment panel opens */
+.envelope-btn.shifted {
+  transform: translateX(calc(-50% - 280px));
+  /* Maintain centering + shift */
 }
 
 .envelope-icon {
   width: 24px;
   height: 24px;
+  color: var(--text-glow);
+  transition: color 0.3s;
+}
+
+.envelope-btn.active .envelope-icon {
+  color: var(--bg-deep);
 }
 
 /* 默认隐藏移动端顶部信息 (PC) */
 .p-mobile-top {
   display: none;
-}
-
-/* === 移动端/竖屏 === */
-@media (max-width: 1100px) {
-
-  html,
-  body {
-    overflow-y: auto;
-    height: auto;
-    min-height: 100%;
-    position: relative;
-  }
-
-  .site-header {
-    position: relative;
-    background: rgba(15, 17, 35, 0.95);
-    height: auto;
-    padding: 20px;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    z-index: 60;
-    /* Ensure header is above panel-top if overlapping */
-  }
-
-  .brand-area {
-    flex-direction: column;
-  }
-
-  .logo-glass {
-    margin-right: 0;
-    margin-bottom: 10px;
-  }
-
-  .brand-text-col {
-    align-items: center;
-  }
-
-  .brand-title {
-    font-size: 30px;
-    text-shadow: 2px 2px 0 var(--accent-pink);
-  }
-
-  .main-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 20px;
-    padding-bottom: 140px;
-    padding-top: 10px;
-    position: relative;
-    z-index: 10;
-  }
-
-  .center-container {
-    position: relative;
-    inset: auto;
-    z-index: 10;
-    order: 1;
-    width: 100%;
-  }
-
-  .center-card {
-    padding: 30px 15px;
-    width: 94%;
-    margin: 0 auto;
-    animation: none;
-    /* 移动端禁用模糊以提升性能 */
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-    background: var(--glass-mobile);
-  }
-
-  .quote-line {
-    font-size: 22px;
-    white-space: normal;
-    text-align: center;
-  }
-
-  .line-1,
-  .line-2 {
-    align-self: center;
-    margin: 0;
-  }
-
-  .quote-en {
-    white-space: normal;
-    margin-top: 10px;
-    line-height: 1.4;
-  }
-
-  /* .mobile-panel-base properties */
-  .panel-top,
-  .panel-left,
-  .panel-right {
-    position: relative !important;
-    /* Force static flow */
-    transform: none !important;
-    top: auto !important;
-    left: auto !important;
-    right: auto !important;
-    width: 94%;
-    max-width: 500px;
-    margin: 0;
-    text-align: left;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    background: var(--glass-mobile);
-    padding: 15px;
-    display: block;
-    /* 移动端禁用模糊以提升性能 */
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-  }
-
-  /* .panel-top specific overrides */
-  .panel-top {
-    order: 2;
-    border-top: 3px solid transparent;
-    background-image: linear-gradient(var(--glass-mobile), var(--glass-mobile)), linear-gradient(90deg, var(--accent-pink), var(--accent-blue));
-    background-origin: border-box;
-    background-clip: padding-box, border-box;
-    /* 移动端禁用模糊以提升性能 */
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-  }
-
-  .top-layout {
-    display: block;
-  }
-
-  .panel-top .album-header {
-    text-align: left;
-    border-right: none;
-    padding-right: 0;
-    margin-bottom: 15px;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .panel-top .album-header .deco-pixel {
-    margin-right: 8px;
-    order: -1;
-  }
-
-  .panel-top .song-list {
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .panel-top .song-list li {
-    align-items: flex-start;
-    text-align: left;
-    background: transparent !important;
-    border-left: 2px solid transparent;
-    padding: 5px 10px;
-  }
-
-  .panel-top .song-list li.active {
-    border-left-color: var(--text-glow);
-  }
-
-  .panel-top .song-list li.active::before {
-    content: none;
-  }
-
-  .panel-left {
-    order: 3;
-    border-left: 3px solid var(--accent-pink);
-  }
-
-  .panel-right {
-    order: 4;
-    border-right: 3px solid var(--accent-blue);
-    text-align: left;
-  }
-
-  .panel-right .album-header {
-    justify-content: flex-start;
-  }
-
-  .panel-right .album-header .deco-pixel {
-    margin-left: 0;
-    margin-right: 8px;
-    order: -1;
-  }
-
-  .panel-right .song-list li {
-    align-items: flex-start;
-  }
-
-  .panel-right .song-list li.active::after {
-    content: none;
-  }
-
-  .panel-right .song-list li.active::before {
-    content: '►';
-    left: -8px;
-    position: absolute;
-    font-size: 10px;
-    animation: blink 1s infinite;
-    color: var(--accent-blue);
-  }
-
-  .player-container {
-    bottom: 10px;
-    width: 96%;
-    max-width: 500px;
-  }
-
-  .player-capsule {
-    width: 100%;
-    max-width: none;
-    height: auto !important;
-    padding: 12px 16px;
-    border-radius: 16px;
-    overflow: visible;
-    /* 移动端禁用模糊以提升性能 */
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-    background: rgba(15, 17, 35, 1);
-    justify-content: space-evenly;
-  }
-
-  .player-capsule:hover,
-  .player-capsule.expanded {
-    width: 96%;
-    height: auto !important;
-    border-radius: 16px;
-  }
-
-  /* 隐藏横屏专用元素 */
-  .p-compact {
-    display: none;
-  }
-
-  /* 展开区域在竖屏始终显示 */
-  .p-expand {
-    opacity: 1;
-    max-height: none;
-    overflow: visible;
-    order: 1;
-    padding: 0;
-    margin-bottom: 10px;
-  }
-
-  .vol-wrap {
-    display: none;
-  }
-
-  .progress-wrapper {
-    gap: 10px;
-  }
-
-  .time-label {
-    font-size: 12px;
-    color: rgba(224, 230, 255, 0.7);
-  }
-
-  .progress-thumb {
-    transform: translate(-50%, -50%) scale(1) !important;
-  }
-
-  /* 竖屏控件行显示 */
-  .p-mobile-controls {
-    display: flex !important;
-    align-items: center;
-    justify-content: space-around;
-    order: 2;
-    padding: 0 10px;
-  }
-
-  /* Canvas波形竖屏适配 */
-  .visualizer-canvas {
-    width: 92%;
-    height: 35px;
-    margin-bottom: -5px;
-  }
-
-  /* 移动端顶部信息：封面+歌名 */
-  .p-mobile-top {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 14px;
-    width: 100%;
-  }
-
-  .mobile-disc {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    overflow: hidden;
-    flex-shrink: 0;
-    border: 2px solid rgba(255, 255, 255, 0.15);
-    animation: disc-spin 8s linear infinite paused;
-    box-shadow: 0 0 10px rgba(160, 196, 255, 0.2);
-  }
-
-  .mobile-disc.spinning {
-    animation-play-state: running;
-  }
-
-  .mobile-disc img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  .mobile-song-info {
-    flex: 1;
-    min-width: 0;
-    overflow: hidden;
-    height: 24px;
-    position: relative;
-    mask-image: linear-gradient(90deg, transparent 0%, black 5%, black 95%, transparent 100%);
-    -webkit-mask-image: linear-gradient(90deg, transparent 0%, black 5%, black 95%, transparent 100%);
-  }
-
-  .mobile-song-scroll {
-    white-space: nowrap;
-    display: inline-block;
-    padding: 0 6px;
-    line-height: 24px;
-    font-size: 15px;
-    color: var(--text-glow);
-    font-family: 'DotGothic16', sans-serif;
-  }
-
-  .mobile-song-scroll.scrolling {
-    animation: marquee-scroll var(--scroll-duration, 10s) linear infinite;
-  }
-
-  /* 信封按钮位置调整 (Mobile) */
-  .envelope-btn {
-    bottom: auto;
-    top: 65vh;
-    /* Near text box bottom area instead of footer */
-    right: 20px;
-  }
-
-  .chibi-wrapper {
-    display: none;
-    /* Hide on mobile? User didn't specify. Assuming keep it but maybe fewer? Max 3 still fine. */
-    /* If user wants it on mobile, keep it. But 170px might be big. */
-    /* "Same screen max 3". */
-    /* Let's keep it visible for now, user didn't say hide on mobile. */
-  }
-
-  /* === Lyrics Mobile === */
-  .lyrics-wrapper {
-    height: 100px;
-    margin-top: 10px;
-  }
-
-  .lrc-line {
-    font-size: 14px;
-    padding: 2px 0;
-  }
-
-  .lrc-line.active {
-    font-size: 16px;
-  }
-
-  /* === 留言板移动端适配 (全屏modal覆盖层) === */
-
-  /* 隐藏overlay，移动端留言板自带全屏遮罩 */
-  .comment-overlay {
-    display: none !important;
-  }
-
-  /* 按钮固定底部，z-index最高，永远在最上层 */
-  .envelope-btn,
-  .envelope-btn.active,
-  .envelope-btn.shifted {
-    position: fixed !important;
-    bottom: 130px !important;
-    left: 50% !important;
-    transform: translateX(-50%) !important;
-    margin: 0;
-    z-index: 1001 !important;
-    /* 移动端禁用模糊以提升性能 */
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-    background: rgba(18, 20, 40, 0.95);
-  }
-
-  .envelope-btn:hover {
-    transform: translateX(-50%) scale(1.1) !important;
-  }
-
-  /* 留言板容器变为全屏modal覆盖层 */
-  .comment-panel {
-    position: fixed !important;
-    inset: 0 !important;
-    transform: translateY(100%) !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    max-height: 100% !important;
-    height: 100% !important;
-    background: rgba(10, 12, 28, 1) !important;
-    border: none !important;
-    border-radius: 0 !important;
-    /* 保持 padding 不变以避免关闭时宽度闪烁 */
-    padding: 20px !important;
-    z-index: 1000 !important;
-    opacity: 1 !important;
-    visibility: hidden;
-    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-      visibility 0s 0.4s !important;
-    display: flex;
-    flex-direction: column;
-    /* 关闭时隐藏滚动条防止闪烁 */
-    overflow: hidden !important;
-    will-change: transform;
-    contain: layout style;
-  }
-
-  .comment-panel.open {
-    transform: translateY(0) !important;
-    visibility: visible;
-    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-      visibility 0s 0s !important;
-  }
-
-  .comment-panel .corner {
-    display: none !important;
-  }
-
-  .comment-close {
-    top: 15px !important;
-    right: 15px !important;
-    z-index: 10 !important;
-  }
-
-  .comment-header {
-    flex-shrink: 0;
-    text-align: center;
-    padding-bottom: 15px;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 15px;
-  }
-
-  .comment-body {
-    flex: 1;
-    overflow-y: auto;
-    max-height: none !important;
-    height: auto !important;
-    padding-right: 5px;
-    padding-bottom: 80px;
-    -webkit-overflow-scrolling: touch;
-    /* 延迟显示滚动条直到面板完全打开 */
-    overflow-x: hidden;
-  }
-
-  /* 仅当面板打开时才显示滚动条 */
-  .comment-panel:not(.open) .comment-body {
-    overflow-y: hidden !important;
-  }
-
-  /* 竖屏底部Home键 */
-  .comment-home {
-    display: flex !important;
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 56px;
-    height: 56px;
-    background: var(--glass);
-    border: 2px solid var(--accent-pink);
-    border-radius: 50%;
-    color: var(--accent-pink);
-    cursor: pointer;
-    align-items: center;
-    justify-content: center;
-    z-index: 1002;
-    transition: all 0.3s ease;
-    box-shadow: 0 0 20px rgba(255, 183, 197, 0.3);
-  }
-
-  .comment-home:hover {
-    background: var(--accent-pink);
-    color: var(--bg-deep);
-    box-shadow: 0 0 30px rgba(255, 183, 197, 0.5);
-  }
-
-
-
-  /* New Mobile Envelope Button */
-  .mobile-envelope-btn {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.1);
-    border: 2px solid rgba(255, 255, 255, 0.15);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-glow);
-    flex-shrink: 0;
-    margin-left: 12px;
-    /* Space from song info */
-  }
-
-  /* Reset hover for touch devices */
-  @media (hover: none) {
-
-    .btn-circle:hover,
-    .envelope-btn:hover,
-    .mobile-envelope-btn:hover {
-      transform: none;
-      box-shadow: none;
-      background: transparent;
-      border-color: rgba(255, 255, 255, 0.2);
-    }
-
-    /* Active state for touch feedback */
-    .btn-circle:active,
-    .mobile-envelope-btn:active {
-      background: rgba(255, 255, 255, 0.15);
-      transform: scale(0.95);
-    }
-  }
-
-  .mobile-envelope-btn:active {
-    background: var(--accent-pink);
-    color: #fff;
-  }
-
-  /* Hide main envelope button on mobile */
-  .envelope-btn {
-    display: none !important;
-  }
-
-  .center-container.shifted {
-    transform: none;
-  }
-
-  .center-card.compact {
-    width: 94%;
-    padding: 30px 15px;
-  }
-
-  .center-card.compact .quote-line {
-    font-size: 20px;
-  }
-
-  /* Increase play button size on mobile */
-  .btn-play-main {
-    width: 56px;
-    height: 56px;
-  }
-
-  .btn-play-main .icon-svg {
-    width: 28px;
-    height: 28px;
-  }
-
-  /* Ensure bottom content isn't blocked */
-  .main-wrapper {
-    padding-bottom: 220px;
-  }
 }
 
 /* === Lyrics Base Styles (Placed here to ensure access) === */
@@ -1622,51 +1088,7 @@ input[type=range]:hover::-webkit-slider-thumb {
   will-change: transform, opacity;
 }
 
-/* === 信封按钮 === */
-.envelope-btn {
-  position: fixed;
-  bottom: 120px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 48px;
-  height: 48px;
-  background: var(--glass);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  cursor: pointer;
-  z-index: var(--z-ui);
-  transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  backdrop-filter: blur(8px);
-}
 
-.envelope-btn:hover {
-  border-color: var(--accent-pink);
-  box-shadow: 0 0 15px rgba(255, 183, 197, 0.4);
-}
-
-.envelope-btn.active {
-  background: linear-gradient(135deg, var(--accent-pink), var(--accent-blue));
-  border-color: transparent;
-}
-
-/* 横屏展开时信封跟随文字框左移 */
-.envelope-btn.shifted {
-  transform: translateX(calc(-50% - 280px));
-}
-
-.envelope-icon {
-  width: 24px;
-  height: 24px;
-  color: var(--text-glow);
-  transition: color 0.3s;
-}
-
-.envelope-btn.active .envelope-icon {
-  color: var(--bg-deep);
-}
 
 /* === 留言板遮罩层 === */
 .comment-overlay {
@@ -1947,4 +1369,570 @@ input[type=range]:hover::-webkit-slider-thumb {
 
 .comment-body::-webkit-scrollbar-thumb:hover {
   background: var(--accent-pink);
+}
+
+/* === 移动端/竖屏 === */
+@media (max-width: 1100px) {
+
+  html,
+  body {
+    overflow-y: auto;
+    height: auto;
+    min-height: 100%;
+    position: relative;
+  }
+
+  .site-header {
+    position: relative;
+    background: rgba(15, 17, 35, 0.95);
+    height: auto;
+    padding: 20px;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    z-index: 60;
+    /* Ensure header is above panel-top if overlapping */
+  }
+
+  .brand-area {
+    flex-direction: column;
+  }
+
+  .logo-glass {
+    margin-right: 0;
+    margin-bottom: 10px;
+  }
+
+  .brand-text-col {
+    align-items: center;
+  }
+
+  .brand-title {
+    font-size: 30px;
+    text-shadow: 2px 2px 0 var(--accent-pink);
+  }
+
+  .main-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    padding-bottom: 140px;
+    padding-top: 10px;
+    position: relative;
+    z-index: 10;
+  }
+
+  .center-container {
+    position: relative;
+    inset: auto;
+    z-index: 10;
+    order: 1;
+    width: 100%;
+  }
+
+  .center-card {
+    padding: 30px 15px;
+    width: 94%;
+    margin: 0 auto;
+    animation: none;
+    /* 移动端禁用模糊以提升性能 */
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: var(--glass-mobile);
+  }
+
+  .quote-line {
+    font-size: 22px;
+    white-space: normal;
+    text-align: center;
+  }
+
+  .line-1,
+  .line-2 {
+    align-self: center;
+    margin: 0;
+  }
+
+  .quote-en {
+    white-space: normal;
+    margin-top: 10px;
+    line-height: 1.4;
+  }
+
+  /* .mobile-panel-base properties */
+  .panel-top,
+  .panel-left,
+  .panel-right {
+    position: relative !important;
+    /* Force static flow */
+    transform: none !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    width: 94%;
+    max-width: 500px;
+    margin: 0;
+    text-align: left;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--glass-mobile);
+    padding: 15px;
+    display: block;
+    /* 移动端禁用模糊以提升性能 */
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  /* .panel-top specific overrides */
+  .panel-top {
+    order: 2;
+    border-top: 3px solid transparent;
+    background-image: linear-gradient(var(--glass-mobile), var(--glass-mobile)), linear-gradient(90deg, var(--accent-pink), var(--accent-blue));
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+    /* 移动端禁用模糊以提升性能 */
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .top-layout {
+    display: block;
+  }
+
+  .panel-top .album-header {
+    text-align: left;
+    border-right: none;
+    padding-right: 0;
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .panel-top .album-header .deco-pixel {
+    margin-right: 8px;
+    order: -1;
+  }
+
+  .panel-top .song-list {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .panel-top .song-list li {
+    align-items: flex-start;
+    text-align: left;
+    background: transparent !important;
+    border-left: 2px solid transparent;
+    padding: 5px 10px;
+  }
+
+  .panel-top .song-list li.active {
+    border-left-color: var(--text-glow);
+  }
+
+  .panel-top .song-list li.active::before {
+    content: none;
+  }
+
+  .panel-left {
+    order: 3;
+    border-left: 3px solid var(--accent-pink);
+  }
+
+  .panel-right {
+    order: 4;
+    border-right: 3px solid var(--accent-blue);
+    text-align: left;
+  }
+
+  .panel-right .album-header {
+    justify-content: flex-start;
+  }
+
+  .panel-right .album-header .deco-pixel {
+    margin-left: 0;
+    margin-right: 8px;
+    order: -1;
+  }
+
+  .panel-right .song-list li {
+    align-items: flex-start;
+  }
+
+  .panel-right .song-list li.active::after {
+    content: none;
+  }
+
+  .panel-right .song-list li.active::before {
+    content: '►';
+    left: -8px;
+    position: absolute;
+    font-size: 10px;
+    animation: blink 1s infinite;
+    color: var(--accent-blue);
+  }
+
+  .player-container {
+    bottom: 10px;
+    width: 96%;
+    max-width: 500px;
+  }
+
+  .player-capsule {
+    width: 100%;
+    max-width: none;
+    height: auto !important;
+    padding: 12px 16px;
+    border-radius: 16px;
+    overflow: visible;
+    /* 移动端禁用模糊以提升性能 */
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: rgba(15, 17, 35, 1);
+    justify-content: space-evenly;
+  }
+
+  .player-capsule:hover,
+  .player-capsule.expanded {
+    width: 96%;
+    height: auto !important;
+    border-radius: 16px;
+  }
+
+  /* 隐藏横屏专用元素 */
+  .p-compact {
+    display: none;
+  }
+
+  /* 展开区域在竖屏始终显示 */
+  .p-expand {
+    opacity: 1;
+    max-height: none;
+    overflow: visible;
+    order: 1;
+    padding: 0;
+    margin-bottom: 10px;
+  }
+
+  .vol-wrap {
+    display: none;
+  }
+
+  .progress-wrapper {
+    gap: 10px;
+  }
+
+  .time-label {
+    font-size: 12px;
+    color: rgba(224, 230, 255, 0.7);
+  }
+
+  .progress-thumb {
+    transform: translate(-50%, -50%) scale(1) !important;
+  }
+
+  /* 竖屏控件行显示 */
+  .p-mobile-controls {
+    display: flex !important;
+    align-items: center;
+    justify-content: space-around;
+    order: 2;
+    padding: 0 10px;
+  }
+
+  /* Canvas波形竖屏适配 */
+  .visualizer-canvas {
+    width: 92%;
+    height: 35px;
+    margin-bottom: 0px;
+    /* Remove negative margin to prevent blockage */
+  }
+
+  /* 移动端顶部信息：封面+歌名 */
+  .p-mobile-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+    width: 100%;
+  }
+
+  .mobile-disc {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    animation: disc-spin 8s linear infinite paused;
+    box-shadow: 0 0 10px rgba(160, 196, 255, 0.2);
+  }
+
+  .mobile-disc.spinning {
+    animation-play-state: running;
+  }
+
+  .mobile-disc img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .mobile-song-info {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    height: 24px;
+    position: relative;
+    mask-image: linear-gradient(90deg, transparent 0%, black 5%, black 95%, transparent 100%);
+    -webkit-mask-image: linear-gradient(90deg, transparent 0%, black 5%, black 95%, transparent 100%);
+  }
+
+  .mobile-song-scroll {
+    white-space: nowrap;
+    display: inline-block;
+    padding: 0 6px;
+    line-height: 24px;
+    font-size: 15px;
+    color: var(--text-glow);
+    font-family: 'DotGothic16', sans-serif;
+  }
+
+  .mobile-song-scroll.scrolling {
+    animation: marquee-scroll var(--scroll-duration, 10s) linear infinite;
+  }
+
+  /* 信封按钮位置调整 (Mobile) */
+  .envelope-btn {
+    bottom: auto;
+    top: 65vh;
+    /* Near text box bottom area instead of footer */
+    right: 20px;
+  }
+
+  .chibi-wrapper {
+    display: none;
+    /* Hide on mobile? User didn't specify. Assuming keep it but maybe fewer? Max 3 still fine. */
+    /* If user wants it on mobile, keep it. But 170px might be big. */
+    /* "Same screen max 3". */
+    /* Let's keep it visible for now, user didn't say hide on mobile. */
+  }
+
+  /* === Lyrics Mobile === */
+  .lyrics-wrapper {
+    height: 100px;
+    margin-top: 10px;
+  }
+
+  .lrc-line {
+    font-size: 14px;
+    padding: 2px 0;
+  }
+
+  .lrc-line.active {
+    font-size: 16px;
+  }
+
+  /* === 留言板移动端适配 (全屏modal覆盖层) === */
+
+  /* 隐藏overlay，移动端留言板自带全屏遮罩 */
+  .comment-overlay {
+    display: none !important;
+  }
+
+  /* 按钮固定底部，z-index最高，永远在最上层 */
+  .envelope-btn,
+  .envelope-btn.active,
+  .envelope-btn.shifted {
+    position: fixed !important;
+    bottom: 130px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    margin: 0;
+    z-index: 1001 !important;
+    /* 移动端禁用模糊以提升性能 */
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: rgba(18, 20, 40, 0.95);
+  }
+
+  .envelope-btn:hover {
+    transform: translateX(-50%) scale(1.1) !important;
+  }
+
+  /* 留言板容器变为全屏modal覆盖层 */
+  .comment-panel {
+    position: fixed !important;
+    inset: 0 !important;
+    transform: translateY(100%) !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    height: 100% !important;
+    background: rgba(10, 12, 28, 1) !important;
+    border: none !important;
+    border-radius: 0 !important;
+    /* 保持 padding 不变以避免关闭时宽度闪烁 */
+    padding: 20px !important;
+    z-index: 1000 !important;
+    opacity: 1 !important;
+    visibility: hidden;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+      visibility 0s 0.4s !important;
+    display: flex;
+    flex-direction: column;
+    /* 关闭时隐藏滚动条防止闪烁 */
+    overflow: hidden !important;
+    will-change: transform;
+    contain: layout style;
+  }
+
+  .comment-panel.open {
+    transform: translateY(0) !important;
+    visibility: visible;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+      visibility 0s 0s !important;
+  }
+
+  .comment-panel .corner {
+    display: none !important;
+  }
+
+  .comment-close {
+    top: 15px !important;
+    right: 15px !important;
+    z-index: 10 !important;
+  }
+
+  .comment-header {
+    flex-shrink: 0;
+    text-align: center;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 15px;
+  }
+
+  .comment-body {
+    flex: 1;
+    overflow-y: auto;
+    max-height: none !important;
+    height: auto !important;
+    padding-right: 5px;
+    padding-bottom: 80px;
+    -webkit-overflow-scrolling: touch;
+    /* 延迟显示滚动条直到面板完全打开 */
+    overflow-x: hidden;
+  }
+
+  /* 仅当面板打开时才显示滚动条 */
+  .comment-panel:not(.open) .comment-body {
+    overflow-y: hidden !important;
+  }
+
+  /* 竖屏底部Home键 */
+  .comment-home {
+    display: flex !important;
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 56px;
+    height: 56px;
+    background: var(--glass);
+    border: 2px solid var(--accent-pink);
+    border-radius: 50%;
+    color: var(--accent-pink);
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    z-index: 1002;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 20px rgba(255, 183, 197, 0.3);
+  }
+
+  .comment-home:hover {
+    background: var(--accent-pink);
+    color: var(--bg-deep);
+    box-shadow: 0 0 30px rgba(255, 183, 197, 0.5);
+  }
+
+
+
+  /* New Mobile Envelope Button */
+  .mobile-envelope-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+    /* More transparent */
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-glow);
+    flex-shrink: 0;
+    margin-left: 12px;
+    /* Space from song info */
+  }
+
+  /* Reset hover for touch devices */
+  @media (hover: none) {
+
+    .btn-circle:hover,
+    .envelope-btn:hover,
+    .mobile-envelope-btn:hover {
+      transform: none;
+      box-shadow: none;
+      background: transparent;
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Active state for touch feedback */
+    .btn-circle:active,
+    .mobile-envelope-btn:active {
+      background: rgba(255, 255, 255, 0.15);
+      transform: scale(0.95);
+    }
+  }
+
+  .mobile-envelope-btn:active {
+    background: var(--accent-pink);
+    color: #fff;
+  }
+
+  /* Hide main envelope button on mobile */
+  .envelope-btn {
+    display: none !important;
+  }
+
+  .center-container.shifted {
+    transform: none;
+  }
+
+  .center-card.compact {
+    width: 94%;
+    padding: 30px 15px;
+  }
+
+  .center-card.compact .quote-line {
+    font-size: 20px;
+  }
+
+  /* Increase play button size on mobile */
+  .btn-play-main {
+    width: 56px;
+    height: 56px;
+  }
+
+  .btn-play-main .icon-svg {
+    width: 28px;
+    height: 28px;
+  }
+
+  /* Ensure bottom content isn't blocked */
+  .main-wrapper {
+    padding-bottom: 220px;
+  }
 }
