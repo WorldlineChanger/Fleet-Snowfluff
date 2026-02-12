@@ -1882,8 +1882,8 @@ input[type=range]:hover::-webkit-slider-thumb {
     width: 48px;
     height: 48px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.05);
-    /* More transparent */
+    background: transparent;
+    /* Transparent */
     border: 2px solid rgba(255, 255, 255, 0.15);
     display: flex;
     align-items: center;
