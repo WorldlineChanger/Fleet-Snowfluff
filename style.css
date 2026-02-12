@@ -573,7 +573,8 @@ body {
   pointer-events: auto;
 }
 
-.player-capsule.expanded {
+.player-capsule.expanded,
+.player-capsule.manual-expand {
   height: 110px;
   width: 560px;
   border-radius: 20px;
@@ -691,7 +692,8 @@ body {
   padding: 0 4px;
 }
 
-.player-capsule.expanded .p-expand {
+.player-capsule.expanded .p-expand,
+.player-capsule.manual-expand .p-expand {
   opacity: 1;
   max-height: 40px;
 }
@@ -1612,7 +1614,8 @@ input[type=range]:hover::-webkit-slider-thumb {
   }
 
   .player-capsule:hover,
-  .player-capsule.expanded {
+  .player-capsule.expanded,
+  .player-capsule.manual-expand {
     width: 96%;
     height: auto !important;
     border-radius: 16px;

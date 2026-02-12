@@ -40,6 +40,7 @@ const progressFill = document.getElementById('progress-fill');
 const progressThumb = document.getElementById('progress-thumb');
 const timeCur = document.getElementById('time-cur');
 const timeDur = document.getElementById('time-dur');
+const playerCapsule = document.getElementById('player-capsule');
 
 // 封面 & 歌名
 const discCover = document.getElementById('disc-cover');
@@ -113,8 +114,16 @@ function setupMarquee(element, text) {
     }, 100);
 }
 
+// 播放指定歌曲
 function playIndex(index) {
     if (index < 0 || index >= allSongs.length) return;
+
+    // 如果点击当前正在播放的歌曲，仅切换播放/暂停
+    if (currentSongIndex === index && audio.src) {
+        togglePlay();
+        return;
+    }
+
     const li = allSongs[index];
     const src = li.getAttribute('data-src');
 
@@ -122,7 +131,7 @@ function playIndex(index) {
     li.classList.add('active');
     currentSongIndex = index;
 
-    // 更新封面 (PC & Mobile)
+    // 更新封面
     const coverSrc = getCoverForSrc(src);
     if (discCoverImg) discCoverImg.src = coverSrc;
     const mobileDiscImg = document.getElementById('mobile-disc-img');
@@ -131,16 +140,30 @@ function playIndex(index) {
     // 更新歌名
     updateSongName(li);
 
-    if (audio.getAttribute('src') !== src) {
-        audio.src = src;
-        audio.load();
-        loadLyrics(src);
-        connectAudioAnalyser();
-    } else {
-        if (lyricsData.length === 0) loadLyrics(src);
-    }
+    // 核心播放逻辑重构
+    // audio.crossOrigin = "anonymous"; // 移除显式设置，尝试默认同源策略
+    audio.src = src;
+    audio.load(); // 标准重置流程
 
-    audio.play().then(() => updatePlayState(true)).catch(() => updatePlayState(false));
+    // 监听错误
+    audio.onerror = (e) => {
+        console.error("Audio Error:", audio.error, e);
+    };
+
+    // 加载歌词
+    loadLyrics(src);
+
+    // 尝试播放
+    const playPromise = audio.play();
+    if (playPromise !== undefined) {
+        playPromise.then(() => {
+            updatePlayState(true);
+            connectAudioAnalyser(); // 确保音频上下文连接
+        }).catch(error => {
+            console.error("Play failed:", error);
+            updatePlayState(false);
+        });
+    }
 }
 
 function togglePlay() {
@@ -396,59 +419,91 @@ const formatTime = (s) => {
 // === 自定义进度条拖拽 ===
 function seekFromEvent(e, track) {
     const rect = track.getBoundingClientRect();
+    if (rect.width === 0) return null; // Return null instead of 0
     const touch = e.changedTouches ? e.changedTouches[0] : (e.touches ? e.touches[0] : null);
     const clientX = touch ? touch.clientX : e.clientX;
+    if (typeof clientX !== 'number') return null; // Return null if no clientX
     let pct = (clientX - rect.left) / rect.width;
-    pct = Math.max(0, Math.min(0.995, pct)); // Clamp to 99.5% to avoid auto-restart/ended event conflict
+    pct = Math.max(0, Math.min(0.995, pct)); // Clamp to 99.5%
     return pct;
 }
 
+// === 稳健的进度条拖拽逻辑 ===
 if (progressTrack && audio) {
-    const startDrag = (e) => {
-        isDraggingProgress = true;
+    let isSeeking = false;
+
+    // 计算进度的辅助函数
+    const calculatePct = (e) => {
+        const rect = progressTrack.getBoundingClientRect();
+        if (rect.width === 0) return null;
+        let clientX;
+        if (e.changedTouches && e.changedTouches.length > 0) {
+            clientX = e.changedTouches[0].clientX;
+        } else if (e.touches && e.touches.length > 0) {
+            clientX = e.touches[0].clientX;
+        } else {
+            clientX = e.clientX;
+        }
+
+        if (typeof clientX !== 'number') return null;
+
+        let pct = (clientX - rect.left) / rect.width;
+        return Math.max(0, Math.min(0.995, pct));
+    };
+
+    const onDragStart = (e) => {
+        isSeeking = true;
+        isDraggingProgress = true; // 保持全局变量兼容
+        if (playerCapsule) playerCapsule.classList.add('manual-expand');
         progressTrack.classList.add('dragging');
-        const pct = seekFromEvent(e, progressTrack);
-        if (audio.duration) {
-            const time = pct * audio.duration;
-            progressFill.style.width = (pct * 100) + '%';
-            progressThumb.style.left = (pct * 100) + '%';
-            if (timeCur) timeCur.textContent = formatTime(time);
-            syncLyrics(time);
-        }
+
+        const pct = calculatePct(e);
+        if (pct !== null) updateUI(pct);
     };
-    const moveDrag = (e) => {
-        if (!isDraggingProgress) return;
-        e.preventDefault();
-        const pct = seekFromEvent(e, progressTrack);
-        if (audio.duration) {
-            const time = pct * audio.duration;
-            progressFill.style.width = (pct * 100) + '%';
-            progressThumb.style.left = (pct * 100) + '%';
-            if (timeCur) timeCur.textContent = formatTime(time);
-            syncLyrics(time);
-        }
+
+    const onDragMove = (e) => {
+        if (!isSeeking) return;
+        e.preventDefault(); // 防止触摸滚动
+        const pct = calculatePct(e);
+        if (pct !== null) updateUI(pct);
     };
-    const endDrag = (e) => {
-        if (!isDraggingProgress) return;
+
+    const onDragEnd = (e) => {
+        if (!isSeeking) return;
+        isSeeking = false;
         isDraggingProgress = false;
+        if (playerCapsule) playerCapsule.classList.remove('manual-expand');
         progressTrack.classList.remove('dragging');
-        const pct = seekFromEvent(e, progressTrack);
-        if (audio.duration && Number.isFinite(audio.duration) && Number.isFinite(pct)) {
-            const newTime = pct * audio.duration;
-            audio.currentTime = newTime;
-            // Immediate UI update to prevent visual jump back
-            if (progressFill) progressFill.style.width = (pct * 100) + '%';
-            if (progressThumb) progressThumb.style.left = (pct * 100) + '%';
-            if (timeCur) timeCur.textContent = formatTime(newTime);
+
+        const pct = calculatePct(e);
+        if (pct !== null && audio.duration && Number.isFinite(audio.duration)) {
+            const time = pct * audio.duration;
+            if (Number.isFinite(time)) {
+                audio.currentTime = time;
+                // 立即更新一次UI防止跳变
+                updateUI(pct);
+            }
         }
     };
 
-    progressTrack.addEventListener('mousedown', startDrag);
-    document.addEventListener('mousemove', moveDrag);
-    document.addEventListener('mouseup', endDrag);
-    progressTrack.addEventListener('touchstart', startDrag, { passive: false });
-    document.addEventListener('touchmove', moveDrag, { passive: false });
-    document.addEventListener('touchend', endDrag);
+    const updateUI = (pct) => {
+        if (progressFill) progressFill.style.width = (pct * 100) + '%';
+        if (progressThumb) progressThumb.style.left = (pct * 100) + '%';
+        if (audio.duration) {
+            const time = pct * audio.duration;
+            if (timeCur) timeCur.textContent = formatTime(time);
+            syncLyrics(time);
+        }
+    };
+
+    // 绑定事件
+    progressTrack.addEventListener('mousedown', onDragStart);
+    document.addEventListener('mousemove', onDragMove);
+    document.addEventListener('mouseup', onDragEnd);
+
+    progressTrack.addEventListener('touchstart', onDragStart, { passive: false });
+    document.addEventListener('touchmove', onDragMove, { passive: false });
+    document.addEventListener('touchend', onDragEnd);
 }
 
 function updateVolStyle() {
@@ -817,9 +872,19 @@ function connectAudioAnalyser() {
         analyser = audioCtx.createAnalyser();
         analyser.fftSize = FFT_SIZE;
         analyser.smoothingTimeConstant = 0.75;
-        audioSource = audioCtx.createMediaElementSource(audio);
-        audioSource.connect(analyser);
-        analyser.connect(audioCtx.destination);
+        analyser.smoothingTimeConstant = 0.75;
+        try {
+            audioSource = audioCtx.createMediaElementSource(audio);
+            audioSource.connect(analyser);
+            analyser.connect(audioCtx.destination);
+        } catch (e) {
+            console.warn("Visualizer failed to connect (likely CORS/Taint issue):", e);
+            // If failed, audio can still play, just no visualizer.
+            // But we must connect audio to destination if source was created? 
+            // If createMediaElementSource failed, source is undefined.
+            // If it succeeded but connect failed? Unlikely.
+            // Usually createMediaElementSource throws if tainted.
+        }
     }
     if (audioCtx.state === 'suspended') audioCtx.resume();
 }
