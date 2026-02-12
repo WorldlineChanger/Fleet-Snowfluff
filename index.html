@@ -160,100 +160,134 @@
   </div>
 
   <!-- 胶囊播放器 -->
-  <div class="player-capsule" id="player-capsule">
+  <!-- 播放器容器 (Wrapper) -->
+  <div class="player-container" id="player-container">
     <!-- 像素波形 Canvas -->
     <canvas class="visualizer-canvas" id="visualizer-canvas"></canvas>
 
-    <!-- 收起状态：唱片 + 歌名 + 播放键 + 顺序 -->
-    <div class="p-compact">
-      <div class="disc-cover" id="disc-cover">
-        <img src="music/Cover/飞行雪绒.jpg" alt="cover" id="disc-cover-img">
+    <!-- 胶囊播放器 -->
+    <div class="player-capsule" id="player-capsule">
+
+      <!-- 竖屏专用顶部信息 -->
+      <div class="p-mobile-top">
+        <div class="mobile-disc" id="mobile-disc">
+          <img src="music/Cover/飞行雪绒.jpg" alt="cover" id="mobile-disc-img">
+        </div>
+        <div class="mobile-song-info">
+          <div class="mobile-song-scroll" id="mobile-song-scroll">
+            <span id="mobile-song-text">未在播放</span>
+          </div>
+        </div>
+        <!-- Mobile Envelope Button inside capsule -->
+        <button class="mobile-envelope-btn" id="mobile-envelope-btn">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="5" width="20" height="14" rx="2" />
+            <path d="M2 7l10 7 10-7" />
+          </svg>
+        </button>
       </div>
 
-      <div class="song-name-wrapper">
-        <div class="song-name-scroll" id="song-name-scroll">
-          <span id="song-name-text">未在播放</span>
+      <!-- 收起状态：唱片 + 歌名 + 上一曲 + 播放 + 下一曲 + 顺序 -->
+      <div class="p-compact">
+        <div class="disc-cover" id="disc-cover">
+          <img src="music/Cover/飞行雪绒.jpg" alt="cover" id="disc-cover-img">
+        </div>
+
+        <div class="song-name-wrapper">
+          <div class="song-name-scroll" id="song-name-scroll">
+            <span id="song-name-text">未在播放</span>
+          </div>
+        </div>
+
+        <button class="btn-circle btn-sm" id="btn-prev-pc" title="上一曲">
+          <svg class="icon-svg" viewBox="0 0 24 24">
+            <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z" />
+          </svg>
+        </button>
+
+        <button class="btn-circle" id="btn-play-pause">
+          <svg class="icon-svg" id="icon-play" viewBox="0 0 24 24">
+            <path d="M8 5v14l11-7z" />
+          </svg>
+          <svg class="icon-svg" id="icon-pause" viewBox="0 0 24 24" style="display:none">
+            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+          </svg>
+        </button>
+
+        <button class="btn-circle btn-sm" id="btn-next-pc" title="下一曲">
+          <svg class="icon-svg" viewBox="0 0 24 24">
+            <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" />
+          </svg>
+        </button>
+
+        <button class="btn-circle btn-sm" id="btn-order" title="Play Order" style="border:none;">
+          <svg class="icon-svg" id="icon-order-list" viewBox="0 0 24 24">
+            <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z" />
+            <path d="M0 0h24v24H0z" fill="none" />
+          </svg>
+          <svg class="icon-svg" id="icon-order-single" viewBox="0 0 24 24" style="display:none">
+            <path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4zm-4-2V9h-1l-2 1v1h1.5v4H13z" />
+          </svg>
+          <svg class="icon-svg" id="icon-order-shuffle" viewBox="0 0 24 24" style="display:none">
+            <path
+              d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- 展开区域：进度条 + 时间 + 音量 -->
+      <div class="p-expand">
+        <div class="progress-wrapper">
+          <span class="time-label" id="time-cur">00:00</span>
+          <div class="progress-track" id="progress-track">
+            <div class="progress-bg"></div>
+            <div class="progress-fill" id="progress-fill"></div>
+            <div class="progress-thumb" id="progress-thumb"></div>
+          </div>
+          <span class="time-label" id="time-dur">00:00</span>
+        </div>
+
+        <div class="vol-wrap">
+          <svg class="icon-svg vol-svg" viewBox="0 0 24 24">
+            <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z" />
+          </svg>
+          <input type="range" class="vol-track" id="vol-slider" min="0" max="1" step="0.05" value="1.0">
         </div>
       </div>
 
-      <button class="btn-circle" id="btn-play-pause">
-        <svg class="icon-svg" id="icon-play" viewBox="0 0 24 24">
-          <path d="M8 5v14l11-7z" />
-        </svg>
-        <svg class="icon-svg" id="icon-pause" viewBox="0 0 24 24" style="display:none">
-          <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
-        </svg>
-      </button>
-
-      <button class="btn-circle btn-sm" id="btn-order" title="Play Order" style="border:none;">
-        <svg class="icon-svg" id="icon-order-list" viewBox="0 0 24 24">
-          <path
-            d="M17 16l-4-4V8.82C14.16 8.4 15 7.3 15 6c0-1.66-1.34-3-3-3S9 4.34 9 6c0 1.3.84 2.4 2 2.82V12l-4 4H3v5h5v-3.05l4-4.2 4 4.2V21h5v-5h-4z" />
-          <path d="M0 0h24v24H0z" fill="none" />
-        </svg>
-        <svg class="icon-svg" id="icon-order-single" viewBox="0 0 24 24" style="display:none">
-          <path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4zm-4-2V9h-1l-2 1v1h1.5v4H13z" />
-        </svg>
-        <svg class="icon-svg" id="icon-order-shuffle" viewBox="0 0 24 24" style="display:none">
-          <path
-            d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z" />
-        </svg>
-      </button>
-    </div>
-
-    <!-- 展开区域：进度条 + 时间 + 音量 -->
-    <div class="p-expand">
-      <div class="progress-wrapper">
-        <span class="time-label" id="time-cur">00:00</span>
-        <div class="progress-track" id="progress-track">
-          <div class="progress-bg"></div>
-          <div class="progress-fill" id="progress-fill"></div>
-          <div class="progress-thumb" id="progress-thumb"></div>
-        </div>
-        <span class="time-label" id="time-dur">00:00</span>
-      </div>
-
-      <div class="vol-wrap">
-        <svg class="icon-svg vol-svg" viewBox="0 0 24 24">
-          <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z" />
-        </svg>
-        <input type="range" class="vol-track" id="vol-slider" min="0" max="1" step="0.05" value="0.5">
+      <!-- 竖屏专用控件行 -->
+      <div class="p-mobile-controls">
+        <button class="btn-circle btn-sm" id="btn-order-m" title="Play Order">
+          <svg class="icon-svg" viewBox="0 0 24 24">
+            <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z" />
+          </svg>
+        </button>
+        <button class="btn-circle btn-sm" id="btn-prev" title="上一曲">
+          <svg class="icon-svg" viewBox="0 0 24 24">
+            <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z" />
+          </svg>
+        </button>
+        <button class="btn-circle btn-play-main" id="btn-play-pause-m">
+          <svg class="icon-svg" id="icon-play-m" viewBox="0 0 24 24">
+            <path d="M8 5v14l11-7z" />
+          </svg>
+          <svg class="icon-svg" id="icon-pause-m" viewBox="0 0 24 24" style="display:none">
+            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+          </svg>
+        </button>
+        <button class="btn-circle btn-sm" id="btn-next" title="下一曲">
+          <svg class="icon-svg" viewBox="0 0 24 24">
+            <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" />
+          </svg>
+        </button>
+        <button class="btn-circle btn-sm" id="btn-vol-toggle" title="音量">
+          <svg class="icon-svg" viewBox="0 0 24 24">
+            <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z" />
+          </svg>
+        </button>
       </div>
     </div>
-
-    <!-- 竖屏专用控件行 -->
-    <div class="p-mobile-controls">
-      <button class="btn-circle btn-sm" id="btn-order-m" title="Play Order">
-        <svg class="icon-svg" viewBox="0 0 24 24">
-          <path
-            d="M17 16l-4-4V8.82C14.16 8.4 15 7.3 15 6c0-1.66-1.34-3-3-3S9 4.34 9 6c0 1.3.84 2.4 2 2.82V12l-4 4H3v5h5v-3.05l4-4.2 4 4.2V21h5v-5h-4z" />
-        </svg>
-      </button>
-      <button class="btn-circle btn-sm" id="btn-prev" title="上一曲">
-        <svg class="icon-svg" viewBox="0 0 24 24">
-          <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z" />
-        </svg>
-      </button>
-      <button class="btn-circle btn-play-main" id="btn-play-pause-m">
-        <svg class="icon-svg" id="icon-play-m" viewBox="0 0 24 24">
-          <path d="M8 5v14l11-7z" />
-        </svg>
-        <svg class="icon-svg" id="icon-pause-m" viewBox="0 0 24 24" style="display:none">
-          <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
-        </svg>
-      </button>
-      <button class="btn-circle btn-sm" id="btn-next" title="下一曲">
-        <svg class="icon-svg" viewBox="0 0 24 24">
-          <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" />
-        </svg>
-      </button>
-      <button class="btn-circle btn-sm" id="btn-vol-toggle" title="音量">
-        <svg class="icon-svg" viewBox="0 0 24 24">
-          <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z" />
-        </svg>
-      </button>
-    </div>
-  </div>
+  </div> <!-- End Wrapper -->
 
   <script src="music/lyrics.js"></script>
   <script src="https://registry.npmmirror.com/twikoo/1.6.44/files/dist/twikoo.min.js"></script>

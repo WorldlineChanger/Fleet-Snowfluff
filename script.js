@@ -81,22 +81,36 @@ function updateSongName(li) {
     const title = li.querySelector('.song-title')?.textContent || '';
     const en = li.querySelector('.song-en')?.textContent || '';
     const display = en ? `${title} · ${en}` : title;
+
+    // Update PC
     songNameText.textContent = display;
-    // 复制一份文本用于无缝滚动
-    songNameScroll.classList.remove('scrolling');
-    songNameScroll.innerHTML = `<span id="song-name-text">${display}</span>`;
-    // 检测是否需要滚动
-    requestAnimationFrame(() => {
-        const textW = songNameScroll.scrollWidth;
-        const wrapW = songNameScroll.parentElement.offsetWidth;
+    setupMarquee(songNameScroll, display);
+
+    // Update Mobile
+    const mText = document.getElementById('mobile-song-text');
+    const mScroll = document.getElementById('mobile-song-scroll');
+    if (mText && mScroll) {
+        mText.textContent = display;
+        setupMarquee(mScroll, display);
+    }
+}
+
+function setupMarquee(element, text) {
+    element.classList.remove('scrolling');
+    element.innerHTML = `<span>${text}</span>`;
+    // Delay to ensure layout is calculated correctly
+    setTimeout(() => {
+        // Force Reflow
+        void element.offsetWidth;
+        const textW = element.scrollWidth;
+        const wrapW = element.parentElement.offsetWidth;
         if (textW > wrapW) {
-            // 双份文本实现无缝
-            songNameScroll.innerHTML = `<span>${display}\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0${display}\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0</span>`;
+            element.innerHTML = `<span>${text}\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0${text}\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0</span>`;
             const duration = Math.max(6, textW / 30);
-            songNameScroll.style.setProperty('--scroll-duration', duration + 's');
-            songNameScroll.classList.add('scrolling');
+            element.style.setProperty('--scroll-duration', duration + 's');
+            element.classList.add('scrolling');
         }
-    });
+    }, 100);
 }
 
 function playIndex(index) {
@@ -108,8 +122,11 @@ function playIndex(index) {
     li.classList.add('active');
     currentSongIndex = index;
 
-    // 更新封面
-    if (discCoverImg) discCoverImg.src = getCoverForSrc(src);
+    // 更新封面 (PC & Mobile)
+    const coverSrc = getCoverForSrc(src);
+    if (discCoverImg) discCoverImg.src = coverSrc;
+    const mobileDiscImg = document.getElementById('mobile-disc-img');
+    if (mobileDiscImg) mobileDiscImg.src = coverSrc;
 
     // 更新歌名
     updateSongName(li);
@@ -136,12 +153,18 @@ function togglePlay() {
 }
 
 function updatePlayState(isPlaying) {
-    iconPlay.style.display = isPlaying ? 'none' : 'block';
-    iconPause.style.display = isPlaying ? 'block' : 'none';
+    if (iconPlay) iconPlay.style.display = isPlaying ? 'none' : 'block';
+    if (iconPause) iconPause.style.display = isPlaying ? 'block' : 'none';
+
+    // Mobile Buttons
+    const iconPlayM = document.getElementById('icon-play-m');
+    const iconPauseM = document.getElementById('icon-pause-m');
     if (iconPlayM) iconPlayM.style.display = isPlaying ? 'none' : 'block';
     if (iconPauseM) iconPauseM.style.display = isPlaying ? 'block' : 'none';
-    // 唱片旋转
+
     if (discCover) discCover.classList.toggle('spinning', isPlaying);
+    const mobileDisc = document.getElementById('mobile-disc');
+    if (mobileDisc) mobileDisc.classList.toggle('spinning', isPlaying);
 }
 
 // === 首次交互自动播放 ===
@@ -196,6 +219,7 @@ if (audio) {
     audio.addEventListener('timeupdate', () => {
         if (!isDraggingProgress && audio.duration) {
             const pct = (audio.currentTime / audio.duration) * 100;
+            // Only update if difference is significant to avoid jitter
             if (progressFill) progressFill.style.width = pct + '%';
             if (progressThumb) progressThumb.style.left = pct + '%';
             if (timeCur) timeCur.textContent = formatTime(audio.currentTime);
@@ -375,7 +399,7 @@ function seekFromEvent(e, track) {
     const touch = e.changedTouches ? e.changedTouches[0] : (e.touches ? e.touches[0] : null);
     const clientX = touch ? touch.clientX : e.clientX;
     let pct = (clientX - rect.left) / rect.width;
-    pct = Math.max(0, Math.min(1, pct));
+    pct = Math.max(0, Math.min(0.995, pct)); // Clamp to 99.5% to avoid auto-restart/ended event conflict
     return pct;
 }
 
@@ -409,7 +433,14 @@ if (progressTrack && audio) {
         isDraggingProgress = false;
         progressTrack.classList.remove('dragging');
         const pct = seekFromEvent(e, progressTrack);
-        if (audio.duration) audio.currentTime = pct * audio.duration;
+        if (audio.duration && Number.isFinite(audio.duration) && Number.isFinite(pct)) {
+            const newTime = pct * audio.duration;
+            audio.currentTime = newTime;
+            // Immediate UI update to prevent visual jump back
+            if (progressFill) progressFill.style.width = (pct * 100) + '%';
+            if (progressThumb) progressThumb.style.left = (pct * 100) + '%';
+            if (timeCur) timeCur.textContent = formatTime(newTime);
+        }
     };
 
     progressTrack.addEventListener('mousedown', startDrag);
@@ -420,21 +451,52 @@ if (progressTrack && audio) {
     document.addEventListener('touchend', endDrag);
 }
 
-if (volSlider && audio) volSlider.addEventListener('input', (e) => audio.volume = e.target.value);
+function updateVolStyle() {
+    if (volSlider) {
+        const val = volSlider.value * 100;
+        volSlider.style.backgroundSize = `${val}% 100%`;
+    }
+}
+// Init Volume
+if (audio) { audio.volume = 1.0; updateVolStyle(); }
+
+if (volSlider && audio) {
+    volSlider.addEventListener('input', (e) => {
+        audio.volume = e.target.value;
+        updateVolStyle();
+    });
+}
 
 // === 上一曲 / 下一曲 ===
 function playPrev() {
     if (allSongs.length === 0) return;
-    let idx = currentSongIndex - 1;
-    if (idx < 0) idx = allSongs.length - 1;
+    let idx;
+    if (playMode === 2) { // Shuffle -> Random
+        idx = Math.floor(Math.random() * allSongs.length);
+    } else {
+        idx = currentSongIndex - 1;
+        if (idx < 0) idx = allSongs.length - 1;
+    }
     playIndex(idx);
 }
+
 function playNext() {
     if (allSongs.length === 0) return;
-    let idx = currentSongIndex + 1;
-    if (idx >= allSongs.length) idx = 0;
+    let idx;
+    if (playMode === 2) { // Shuffle -> Random
+        idx = Math.floor(Math.random() * allSongs.length);
+    } else {
+        idx = currentSongIndex + 1;
+        if (idx >= allSongs.length) idx = 0;
+    }
     playIndex(idx);
 }
+
+// Bind PC prev/next buttons
+const btnPrevPC = document.getElementById('btn-prev-pc');
+const btnNextPC = document.getElementById('btn-next-pc');
+if (btnPrevPC) btnPrevPC.addEventListener('click', (e) => { e.stopPropagation(); playPrev(); });
+if (btnNextPC) btnNextPC.addEventListener('click', (e) => { e.stopPropagation(); playNext(); });
 
 if (btnPrev) btnPrev.addEventListener('click', (e) => { e.stopPropagation(); playPrev(); });
 if (btnNext) btnNext.addEventListener('click', (e) => { e.stopPropagation(); playNext(); });
@@ -448,9 +510,9 @@ if (btnOrderM) {
         iconsOrder.forEach((icon, i) => icon.style.display = (i === playMode) ? 'block' : 'none');
         // 同步竖屏按钮图标
         const svgPaths = [
-            'M17 16l-4-4V8.82C14.16 8.4 15 7.3 15 6c0-1.66-1.34-3-3-3S9 4.34 9 6c0 1.3.84 2.4 2 2.82V12l-4 4H3v5h5v-3.05l4-4.2 4 4.2V21h5v-5h-4z',
-            'M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4zm-4-2V9h-1l-2 1v1h1.5v4H13z',
-            'M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z'
+            'M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z', // Standard List
+            'M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4zm-4-2V9h-1l-2 1v1h1.5v4H13z', // Loop One
+            'M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z' // Shuffle
         ];
         const svg = btnOrderM.querySelector('svg');
         if (svg) svg.innerHTML = `<path d="${svgPaths[playMode]}" />`;
@@ -471,6 +533,16 @@ allSongs.forEach((li, index) => li.addEventListener('click', (e) => { e.stopProp
 if (btnPlayPause) btnPlayPause.addEventListener('click', (e) => { e.stopPropagation(); togglePlay(); });
 
 // === 2. 掉落物 ===
+
+// Mobile Envelope Button Listener
+const mobileEnvelopeBtn = document.getElementById('mobile-envelope-btn');
+if (mobileEnvelopeBtn) {
+    mobileEnvelopeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleCommentPanel();
+    });
+}
+
 // 预加载图片并为每个图片维护独立的对象池
 const particleSrcs = [
     'assets/icon0.png',
@@ -785,10 +857,11 @@ function drawPixelVisualizer() {
     analyser.getByteFrequencyData(dataArr);
 
     // 像素风方块参数
-    const barCount = Math.min(32, bufLen);
+    const barCount = Math.min(64, bufLen);
     const pixelSize = 3;
     const gap = 2;
     const totalBarW = pixelSize;
+    // Calculate space to determine if we can fit more or justify
     const totalW = barCount * (totalBarW + gap) - gap;
     const startX = (w - totalW) / 2;
 

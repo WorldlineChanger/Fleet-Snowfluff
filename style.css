@@ -146,6 +146,13 @@ body {
   border: 1px solid transparent;
 }
 
+@media (hover: hover) {
+  .song-list li:hover .song-title {
+    opacity: 1;
+    text-shadow: 0 0 8px currentColor;
+  }
+}
+
 .song-title {
   font-size: 15px;
   color: var(--text-glow);
@@ -527,19 +534,32 @@ body {
   }
 }
 
-/* === 播放器 (PC) === */
-.player-capsule {
+/* === 播放器容器 (Wrapper) === */
+.player-container {
   position: fixed;
   bottom: 30px;
   left: 50%;
   transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  /* Items flow Top-to-Bottom: Canvas first, then Capsule */
+  /* Since container is fixed bottom, Capsule (last item) is at bottom. Canvas (first item) is above it. Correct. */
+  align-items: center;
+  z-index: var(--z-ui);
+  width: auto;
+  pointer-events: none;
+  /* Allow clicks through empty areas */
+}
+
+/* === 胶囊播放器 (PC) === */
+.player-capsule {
+  position: relative;
   height: 56px;
   width: 420px;
   background: rgba(15, 17, 35, 0.95);
   border: 1px solid var(--border);
   border-radius: 50px;
   backdrop-filter: blur(12px);
-  z-index: var(--z-ui);
   box-shadow: 0 5px 25px rgba(0, 0, 0, 0.6);
   display: flex;
   flex-direction: column;
@@ -550,6 +570,7 @@ body {
     border-radius 0.4s ease,
     border-color 0.3s;
   overflow: hidden;
+  pointer-events: auto;
 }
 
 .player-capsule:hover,
@@ -559,6 +580,15 @@ body {
   border-radius: 20px;
   border-color: var(--accent-blue);
   box-shadow: 0 8px 30px rgba(160, 196, 255, 0.2);
+  transform: translateY(-10px);
+  /* Move up slightly when expanded */
+  justify-content: space-evenly;
+  /* Ensure rows are spaced evenly */
+}
+
+.player-capsule:hover .disc-cover {
+  transform: scale(1.6);
+  /* Larger scale 1.6x */
 }
 
 /* --- 收起行：唱片 + 歌名 + 播放 + 顺序 --- */
@@ -723,9 +753,14 @@ body {
   pointer-events: none;
 }
 
-.progress-track:hover .progress-thumb,
 .progress-track.dragging .progress-thumb {
   transform: translate(-50%, -50%) scale(1);
+}
+
+@media (hover: hover) {
+  .progress-track:hover .progress-thumb {
+    transform: translate(-50%, -50%) scale(1);
+  }
 }
 
 /* 音量控制 */
@@ -781,15 +816,22 @@ input[type=range]:hover::-webkit-slider-thumb {
 }
 
 /* --- Canvas 波形 --- */
+/* --- Canvas 波形 --- */
 .visualizer-canvas {
   position: absolute;
   bottom: 100%;
-  left: 16px;
-  right: 16px;
-  height: 40px;
+  /* Anchor to top of capsule */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  /* Full width of capsule container or more */
+  height: 60px;
+  /* Slight increase */
+  margin-bottom: 0px;
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.4s ease;
+  z-index: -1;
 }
 
 .visualizer-canvas.active {
@@ -831,12 +873,24 @@ input[type=range]:hover::-webkit-slider-thumb {
 .btn-play-main .icon-svg {
   width: 22px;
   height: 22px;
-  fill: var(--bg-deep);
+  fill: #fff;
 }
 
-.btn-play-main:hover {
-  transform: scale(1.1);
-  box-shadow: 0 0 25px rgba(255, 183, 197, 0.5);
+#btn-play-pause {
+  width: 44px;
+  height: 44px;
+}
+
+#btn-play-pause .icon-svg {
+  width: 20px;
+  height: 20px;
+}
+
+@media (hover: hover) {
+  .btn-play-main:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 25px rgba(255, 183, 197, 0.5);
+  }
 }
 
 .btn-circle {
@@ -854,11 +908,13 @@ input[type=range]:hover::-webkit-slider-thumb {
   flex-shrink: 0;
 }
 
-.btn-circle:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: var(--accent-pink);
-  box-shadow: 0 0 8px var(--accent-pink);
-  transform: scale(1.05);
+@media (hover: hover) {
+  .btn-circle:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--accent-pink);
+    box-shadow: 0 0 8px var(--accent-pink);
+    transform: scale(1.05);
+  }
 }
 
 .icon-svg {
@@ -894,6 +950,50 @@ input[type=range]:hover::-webkit-slider-thumb {
   max-height: 170px;
 }
 
+
+/* 信封留言板按钮 - Fixed Position for PC */
+.envelope-btn {
+  position: fixed;
+  top: auto;
+  /* Adjusted height to be closer to text box */
+  bottom: 22%;
+  /* Position below center (approx) */
+  right: 60px;
+  /* Slightly more inward */
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(15, 17, 35, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 120;
+  backdrop-filter: blur(8px);
+  cursor: pointer;
+  transition: all 0.3s;
+  color: #fff;
+}
+
+@media (hover: hover) {
+  .envelope-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--accent-pink);
+    transform: scale(1.1);
+    /* Removed translation */
+    box-shadow: 0 0 15px var(--accent-pink);
+  }
+}
+
+.envelope-icon {
+  width: 24px;
+  height: 24px;
+}
+
+/* 默认隐藏移动端顶部信息 (PC) */
+.p-mobile-top {
+  display: none;
+}
 
 /* === 移动端/竖屏 === */
 @media (max-width: 1100px) {
@@ -1098,11 +1198,16 @@ input[type=range]:hover::-webkit-slider-thumb {
     color: var(--accent-blue);
   }
 
-  .player-capsule {
+  .player-container {
+    bottom: 10px;
     width: 96%;
     max-width: 500px;
+  }
+
+  .player-capsule {
+    width: 100%;
+    max-width: none;
     height: auto !important;
-    bottom: 10px;
     padding: 12px 16px;
     border-radius: 16px;
     overflow: visible;
@@ -1110,6 +1215,7 @@ input[type=range]:hover::-webkit-slider-thumb {
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
     background: rgba(15, 17, 35, 1);
+    justify-content: space-evenly;
   }
 
   .player-capsule:hover,
@@ -1162,9 +1268,71 @@ input[type=range]:hover::-webkit-slider-thumb {
 
   /* Canvas波形竖屏适配 */
   .visualizer-canvas {
-    left: 12px;
-    right: 12px;
+    width: 92%;
     height: 35px;
+    margin-bottom: -5px;
+  }
+
+  /* 移动端顶部信息：封面+歌名 */
+  .p-mobile-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+    width: 100%;
+  }
+
+  .mobile-disc {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    animation: disc-spin 8s linear infinite paused;
+    box-shadow: 0 0 10px rgba(160, 196, 255, 0.2);
+  }
+
+  .mobile-disc.spinning {
+    animation-play-state: running;
+  }
+
+  .mobile-disc img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .mobile-song-info {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    height: 24px;
+    position: relative;
+    mask-image: linear-gradient(90deg, transparent 0%, black 5%, black 95%, transparent 100%);
+    -webkit-mask-image: linear-gradient(90deg, transparent 0%, black 5%, black 95%, transparent 100%);
+  }
+
+  .mobile-song-scroll {
+    white-space: nowrap;
+    display: inline-block;
+    padding: 0 6px;
+    line-height: 24px;
+    font-size: 15px;
+    color: var(--text-glow);
+    font-family: 'DotGothic16', sans-serif;
+  }
+
+  .mobile-song-scroll.scrolling {
+    animation: marquee-scroll var(--scroll-duration, 10s) linear infinite;
+  }
+
+  /* 信封按钮位置调整 (Mobile) */
+  .envelope-btn {
+    bottom: auto;
+    top: 65vh;
+    /* Near text box bottom area instead of footer */
+    right: 20px;
   }
 
   .chibi-wrapper {
@@ -1315,7 +1483,52 @@ input[type=range]:hover::-webkit-slider-thumb {
 
 
 
-  /* 移动端不需要shifted/compact状态 */
+  /* New Mobile Envelope Button */
+  .mobile-envelope-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-glow);
+    flex-shrink: 0;
+    margin-left: 12px;
+    /* Space from song info */
+  }
+
+  /* Reset hover for touch devices */
+  @media (hover: none) {
+
+    .btn-circle:hover,
+    .envelope-btn:hover,
+    .mobile-envelope-btn:hover {
+      transform: none;
+      box-shadow: none;
+      background: transparent;
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Active state for touch feedback */
+    .btn-circle:active,
+    .mobile-envelope-btn:active {
+      background: rgba(255, 255, 255, 0.15);
+      transform: scale(0.95);
+    }
+  }
+
+  .mobile-envelope-btn:active {
+    background: var(--accent-pink);
+    color: #fff;
+  }
+
+  /* Hide main envelope button on mobile */
+  .envelope-btn {
+    display: none !important;
+  }
+
   .center-container.shifted {
     transform: none;
   }
@@ -1327,6 +1540,22 @@ input[type=range]:hover::-webkit-slider-thumb {
 
   .center-card.compact .quote-line {
     font-size: 20px;
+  }
+
+  /* Increase play button size on mobile */
+  .btn-play-main {
+    width: 56px;
+    height: 56px;
+  }
+
+  .btn-play-main .icon-svg {
+    width: 28px;
+    height: 28px;
+  }
+
+  /* Ensure bottom content isn't blocked */
+  .main-wrapper {
+    padding-bottom: 220px;
   }
 }
 
