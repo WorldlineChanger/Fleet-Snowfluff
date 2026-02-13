@@ -153,12 +153,14 @@ function playIndex(index) {
     // 加载歌词
     loadLyrics(src);
 
-    // 尝试播放
+    // 尝试播放（先连接 WebAudio，确保在用户手势里解锁）
+    connectAudioAnalyser();
+
     const playPromise = audio.play();
     if (playPromise !== undefined) {
         playPromise.then(() => {
             updatePlayState(true);
-            connectAudioAnalyser(); // 确保音频上下文连接
+            hasTriedAutoPlay = true; // 只有真正播放成功后才锁定自动播放
         }).catch(error => {
             console.error("Play failed:", error);
             updatePlayState(false);
@@ -171,7 +173,15 @@ function togglePlay() {
         playIndex(Math.floor(Math.random() * allSongs.length));
         return;
     }
-    if (audio.paused) { audio.play(); updatePlayState(true); }
+    if (audio.paused) {
+        connectAudioAnalyser();
+        const p = audio.play();
+        if (p && p.then) {
+            p.then(() => updatePlayState(true)).catch(() => updatePlayState(false));
+        } else {
+            updatePlayState(true);
+        }
+    }
     else { audio.pause(); updatePlayState(false); }
 }
 
@@ -195,20 +205,19 @@ let hasTriedAutoPlay = false;
 
 function tryAutoPlay() {
     if (hasTriedAutoPlay) return;
-    hasTriedAutoPlay = true;
 
     // 如果没有在播放且没有选择过歌曲，随机播放一首
     if (audio && audio.paused && currentSongIndex === -1) {
         const randomIndex = Math.floor(Math.random() * allSongs.length);
         playIndex(randomIndex);
     }
+
 }
 
 // 监听各种交互事件来触发首次播放
-['click', 'touchstart', 'keydown', 'scroll'].forEach(eventType => {
-    document.addEventListener(eventType, tryAutoPlay, { once: true, passive: true });
+['click', 'touchstart', 'keydown'].forEach(eventType => {
+    document.addEventListener(eventType, tryAutoPlay, { passive: true });
 });
-
 
 if (btnOrder) {
     btnOrder.addEventListener('click', (e) => {
@@ -431,6 +440,7 @@ function seekFromEvent(e, track) {
 // === 稳健的进度条拖拽逻辑 ===
 if (progressTrack && audio) {
     let isSeeking = false;
+    let wasPlayingBeforeSeek = false;
 
     // 计算进度的辅助函数
     const calculatePct = (e) => {
@@ -452,6 +462,7 @@ if (progressTrack && audio) {
     };
 
     const onDragStart = (e) => {
+        wasPlayingBeforeSeek = !audio.paused;
         isSeeking = true;
         isDraggingProgress = true; // 保持全局变量兼容
         if (playerCapsule) playerCapsule.classList.add('manual-expand');
@@ -482,6 +493,11 @@ if (progressTrack && audio) {
                 audio.currentTime = time;
                 // 立即更新一次UI防止跳变
                 updateUI(pct);
+                // 如果拖动前在播放，拖动结束后继续播放（避免部分环境 seek 后短暂停住）
+                if (wasPlayingBeforeSeek) {
+                    const p = audio.play();
+                    if (p && p.catch) p.catch(() => { });
+                }
             }
         }
     };
@@ -867,6 +883,9 @@ const FFT_SIZE = 128;
 
 function connectAudioAnalyser() {
     if (!audio || !vizCanvas) return;
+    // 在 file:// 下某些浏览器对 WebAudio 解锁更严格，可能导致“进度在走但无声”。
+    // 本地直接打开时优先保证有声音：跳过可视化连接。
+    if (window.location && window.location.protocol === 'file:') return;
     if (!audioCtx) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         analyser = audioCtx.createAnalyser();
@@ -886,7 +905,9 @@ function connectAudioAnalyser() {
             // Usually createMediaElementSource throws if tainted.
         }
     }
-    if (audioCtx.state === 'suspended') audioCtx.resume();
+    if (audioCtx && audioCtx.state === 'suspended') {
+        try { audioCtx.resume(); } catch (_) { /* ignore */ }
+    }
 }
 
 function drawPixelVisualizer() {
