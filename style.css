@@ -551,6 +551,24 @@ body {
   /* Allow clicks through empty areas */
 }
 
+
+/* === 触屏交互细节（仅播放器区域） === */
+.player-container,
+.player-container * {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.player-container button:focus {
+  outline: none;
+}
+
+.player-container button:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+}
+
 /* === 胶囊播放器 (PC) === */
 .player-capsule {
   position: relative;
@@ -730,6 +748,9 @@ body {
   display: flex;
   align-items: center;
   cursor: pointer;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .progress-bg {
@@ -1619,6 +1640,15 @@ input[type=range]:hover::-webkit-slider-thumb {
     width: 96%;
     height: auto !important;
     border-radius: 16px;
+  }
+
+
+  /* 竖屏拖动进度条时，不要触发“悬浮/选中”视觉（避免胶囊变亮/上移） */
+  .player-capsule.expanded,
+  .player-capsule.manual-expand {
+    border-color: var(--border);
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.6);
+    transform: none;
   }
 
   /* 隐藏横屏专用元素 */

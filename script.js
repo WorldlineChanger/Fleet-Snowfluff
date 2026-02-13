@@ -52,6 +52,12 @@ const songNameScroll = document.getElementById('song-name-scroll');
 const btnPrev = document.getElementById('btn-prev');
 const btnNext = document.getElementById('btn-next');
 
+// 触屏上点击按钮后立即移除焦点，避免出现“按下态黏住/选中框”
+Array.from(document.querySelectorAll('.player-container button')).forEach((btn) => {
+    btn.addEventListener('click', () => btn.blur());
+});
+
+
 let currentSongIndex = -1;
 let isDraggingProgress = false;
 let playMode = 0;
@@ -462,10 +468,14 @@ if (progressTrack && audio) {
     };
 
     const onDragStart = (e) => {
+        // 触屏下先阻止默认行为，避免出现选中文本/按钮焦点等“黏住”的效果
+        if (e && e.cancelable) e.preventDefault();
         wasPlayingBeforeSeek = !audio.paused;
         isSeeking = true;
         isDraggingProgress = true; // 保持全局变量兼容
-        if (playerCapsule) playerCapsule.classList.add('manual-expand');
+        // 竖屏/移动端不需要 manual-expand（展开区域本来就常驻显示），避免胶囊出现“悬浮选中”视觉
+        const isMobileLayout = window.matchMedia && window.matchMedia('(max-width: 1100px)').matches;
+        if (!isMobileLayout && playerCapsule) playerCapsule.classList.add('manual-expand');
         progressTrack.classList.add('dragging');
 
         const pct = calculatePct(e);
@@ -520,6 +530,28 @@ if (progressTrack && audio) {
     progressTrack.addEventListener('touchstart', onDragStart, { passive: false });
     document.addEventListener('touchmove', onDragMove, { passive: false });
     document.addEventListener('touchend', onDragEnd);
+    document.addEventListener('touchcancel', onDragEnd);
+}
+
+// === 音量 / 静音 UI 同步（横屏滑条 + 竖屏按钮共用同一套状态） ===
+const VOL_ICON_ON = "M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z";
+const VOL_ICON_OFF = "M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zM14 3.23v2.06c.1.05.21.11.31.17L16.5 3.23zM3 9v6h4l5 5V4L7 9H3zm9 3c0 1.77 1.02 3.29 2.5 4.03v-8.05c-1.48.73-2.5 2.25-2.5 4.02zM20 12c0 .82-.15 1.61-.41 2.34l1.53 1.53C21.68 14.7 22 13.38 22 12c0-3.28-1.64-6.19-4.16-7.93l-1.43 1.43C18.07 6.99 20 9.36 20 12zM4.27 3L3 4.27l9 9V20h2v-4.73l5.73 5.73L21 19.73 4.27 3z";
+let lastNonZeroVolume = 1.0;
+
+const volSvg = document.querySelector('.vol-wrap .vol-svg');
+const volSvgPath = document.querySelector('.vol-wrap .vol-svg path');
+const volToggleSvgPath = document.querySelector('#btn-vol-toggle svg path');
+
+function syncMuteIcon() {
+    if (!audio) return;
+    const isMuted = audio.muted || audio.volume <= 0.001;
+    const d = isMuted ? VOL_ICON_OFF : VOL_ICON_ON;
+
+    if (volSvgPath) volSvgPath.setAttribute('d', d);
+    if (volToggleSvgPath) volToggleSvgPath.setAttribute('d', d);
+
+    const btnVol = document.getElementById('btn-vol-toggle');
+    if (btnVol) btnVol.style.opacity = isMuted ? '0.6' : '1';
 }
 
 function updateVolStyle() {
@@ -529,14 +561,49 @@ function updateVolStyle() {
     }
 }
 // Init Volume
-if (audio) { audio.volume = 1.0; updateVolStyle(); }
+if (audio) { audio.volume = 1.0; audio.muted = false; lastNonZeroVolume = audio.volume; updateVolStyle(); syncMuteIcon(); }
 
 if (volSlider && audio) {
     volSlider.addEventListener('input', (e) => {
-        audio.volume = e.target.value;
+        const v = parseFloat(e.target.value);
+        if (!Number.isFinite(v) || !audio) return;
+        audio.volume = v;
+        if (v <= 0.001) {
+            audio.muted = true;
+        } else {
+            audio.muted = false;
+            lastNonZeroVolume = v;
+        }
         updateVolStyle();
+        syncMuteIcon();
     });
 }
+
+// 横屏音量图标也支持点击静音
+if (volSvg && audio) {
+    volSvg.style.cursor = 'pointer';
+    volSvg.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (!audio.muted && audio.volume > 0.001) {
+            lastNonZeroVolume = audio.volume;
+            audio.muted = true;
+        } else {
+            audio.muted = false;
+            if (audio.volume <= 0.001 && lastNonZeroVolume > 0.001) {
+                audio.volume = lastNonZeroVolume;
+                if (volSlider) {
+                    volSlider.value = String(lastNonZeroVolume);
+                    updateVolStyle();
+                }
+            }
+        }
+        syncMuteIcon();
+    });
+}
+
+// 旋转/布局变化后，图标可能从隐藏变为显示：再次同步一下
+window.addEventListener('resize', syncMuteIcon);
+
 
 // === 上一曲 / 下一曲 ===
 function playPrev() {
@@ -590,13 +657,28 @@ if (btnOrderM) {
     });
 }
 
-// 竖屏音量按钮切换静音
+// 竖屏音量按钮：切换静音（并同步横屏滑条/图标）
 const btnVolToggle = document.getElementById('btn-vol-toggle');
 if (btnVolToggle && audio) {
     btnVolToggle.addEventListener('click', (e) => {
         e.stopPropagation();
-        audio.muted = !audio.muted;
-        btnVolToggle.style.opacity = audio.muted ? '0.4' : '1';
+
+        if (!audio.muted && audio.volume > 0.001) {
+            lastNonZeroVolume = audio.volume;
+            audio.muted = true;
+        } else {
+            audio.muted = false;
+            if (audio.volume <= 0.001 && lastNonZeroVolume > 0.001) {
+                audio.volume = lastNonZeroVolume;
+                if (volSlider) {
+                    volSlider.value = String(lastNonZeroVolume);
+                    updateVolStyle();
+                }
+            }
+        }
+
+        syncMuteIcon();
+        btnVolToggle.blur();
     });
 }
 
